@@ -89,7 +89,7 @@ DATABASES = {
         'USER': 'lraa_ssbs',
         'PASSWORD': 'lraa1928',
         'HOST': '172.31.1.72',
-        'PORT': '3346',
+        'PORT': '3306',
     }
 }
 
