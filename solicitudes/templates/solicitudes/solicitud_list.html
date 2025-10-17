@@ -1,0 +1,51 @@
+{% extends "solicitudes/base.html" %}
+
+{% block title %}Listado de Solicitudes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Listado de Solicitudes de Bienes y Servicios</h2>
+    {% if user.job_position != 'Asistente Administrativo' %}
+        <a href="{% url 'solicitud-create' %}" class="btn btn-primary">Crear Nueva Solicitud</a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Departamento</th>
+                    <th scope="col">Monto (SBS)</th>
+                    <th scope="col">Condición</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for solicitud in solicitudes %}
+                <tr>
+                    <th scope="row">{{ solicitud.id }}</th>
+                    <td>{{ solicitud.descripcion_pedido|truncatechars:50 }}</td>
+                    <td>{{ solicitud.get_departamento_display }}</td>
+                    <td>B/. {{ solicitud.monto_comprometido_sbs }}</td>
+                    <td>
+                        <span class="badge bg-secondary">{{ solicitud.seguimiento.get_condicion_display|default:"Sin Iniciar" }}</span>
+                    </td>
+                    <td>
+                        <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn btn-sm btn-info">Ver</a>
+                        <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                        <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No hay solicitudes registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

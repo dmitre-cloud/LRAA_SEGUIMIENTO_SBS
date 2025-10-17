@@ -1,0 +1,145 @@
+{% extends "solicitudes/base.html" %}
+
+{% block title %}Detalle de Solicitud #{{ object.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <h4>Detalles de Solicitud #{{ object.id }}</h4>
+                <a href="{% url 'solicitud-list' %}" class="btn btn-sm btn-secondary">Volver al listado</a>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-5">Descripción:</dt>
+                    <dd class="col-sm-7">{{ object.descripcion_pedido }}</dd>
+
+                    <dt class="col-sm-5">Departamento:</dt>
+                    <dd class="col-sm-7">{{ object.get_departamento_display }}</dd>
+
+                    <dt class="col-sm-5">Ref. Departamento:</dt>
+                    <dd class="col-sm-7">{{ object.ref_departamento|default:"N/A" }}</dd>
+
+                    <dt class="col-sm-5">Tipo de Compra:</dt>
+                    <dd class="col-sm-7">{{ object.get_tipo_compra_display }}</dd>
+
+                    <dt class="col-sm-5">Monto Comprometido:</dt>
+                    <dd class="col-sm-7">B/. {{ object.monto_comprometido_sbs }}</dd>
+                    
+                    <dt class="col-sm-5">Solicitante:</dt>
+                    <dd class="col-sm-7">{{ object.solicitante.get_full_name|default:object.solicitante.username }}</dd>
+                </dl>
+                <a href="{% url 'solicitud-update' object.pk %}" class="btn btn-warning">Editar Solicitud</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <h4>Seguimiento de la Compra</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'seguimiento-update' solicitud_pk=object.pk %}">
+                    {% csrf_token %}
+                    <div class="row">
+                        {% for field in seguimiento_form %}
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }} {# Django renderizará cada campo correctamente #}
+                            {% if field.errors %}
+                                <div class="invalid-feedback d-block">{{ field.errors.as_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100" 
+                            {% if user.job_position != 'Asistente Administrativo' %}disabled{% endif %}>
+                        Guardar Seguimiento
+                    </button>
+
+                    {% if user.job_position != 'Asistente Administrativo' %}
+                        <small class="form-text text-muted text-center d-block mt-2">
+                            Solo el Asistente Administrativo puede editar esta sección.
+                        </small>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Espera a que todo el contenido de la página se cargue antes de ejecutar el código
+document.addEventListener('DOMContentLoaded', function() {
+
+    // 1. Selecciona los tres campos del formulario que usaremos.
+    const fechaPublicacionInput = document.getElementById('id_fecha_publicacion_oc');
+    const plazoEntregaInput = document.getElementById('id_plazo_entrega');
+    const vencimientoInput = document.getElementById('id_vencimiento_oc');
+
+    // Función para añadir días a una fecha, saltándose fines de semana (sábado y domingo)
+    function agregarDiasHabiles(fechaInicial, dias) {
+        let fecha = new Date(fechaInicial.valueOf()); // Clona la fecha para no modificar la original
+        let diasAgregados = 0;
+
+        while (diasAgregados < dias) {
+            // Avanza la fecha un día
+            fecha.setDate(fecha.getDate() + 1);
+            
+            // getDay() devuelve 0 para Domingo y 6 para Sábado.
+            // Si NO es fin de semana, cuenta como un día hábil agregado.
+            if (fecha.getDay() !== 0 && fecha.getDay() !== 6) {
+                diasAgregados++;
+            }
+        }
+        return fecha;
+    }
+
+    // 2. La función principal que se ejecutará cada vez que cambie un valor.
+    function calcularFechaVencimiento() {
+        // Obtiene los valores actuales de los campos
+        const fechaPublicacionValor = fechaPublicacionInput.value;
+        const plazoEntregaValor = parseInt(plazoEntregaInput.value, 10);
+
+        // --- Verificación ---
+        // Si no hay fecha de publicación o el plazo de entrega no es un número válido, no hace nada.
+        if (!fechaPublicacionValor || isNaN(plazoEntregaValor) || plazoEntregaValor <= 0) {
+            vencimientoInput.value = ''; // Limpia el campo si los datos son inválidos
+            return;
+        }
+
+        // --- Cálculo ---
+        // El input de fecha devuelve "YYYY-MM-DD". Al crearlo con new Date(),
+        // puede haber problemas de zona horaria. Añadir 'T00:00:00' lo soluciona.
+        const fechaBase = new Date(fechaPublicacionValor + 'T00:00:00');
+        
+        // Fórmula: Fecha de Publicación + 2 días hábiles + plazo de entrega
+        const totalDiasAAgregar = 2 + plazoEntregaValor;
+        const fechaFinal = agregarDiasHabiles(fechaBase, totalDiasAAgregar);
+
+        // --- Formateo y Asignación ---
+        // Convierte la fecha calculada de vuelta al formato "YYYY-MM-DD" que el input necesita.
+        const anio = fechaFinal.getFullYear();
+        const mes = String(fechaFinal.getMonth() + 1).padStart(2, '0'); // +1 porque los meses van de 0 a 11
+        const dia = String(fechaFinal.getDate()).padStart(2, '0');
+        
+        const fechaFormateada = `${anio}-${mes}-${dia}`;
+        vencimientoInput.value = fechaFormateada;
+    }
+
+    // 3. Asigna los "event listeners" (escuchadores).
+    // Estos le dicen al navegador que ejecute nuestra función cuando el usuario haga algo.
+    fechaPublicacionInput.addEventListener('change', calcularFechaVencimiento);
+    plazoEntregaInput.addEventListener('input', calcularFechaVencimiento);
+
+    // 4. Llama a la función una vez al cargar la página.
+    // Esto es útil por si el formulario ya tiene datos guardados, para que calcule la fecha inicial.
+    calcularFechaVencimiento();
+
+});
+</script>
+{% endblock %}
+
