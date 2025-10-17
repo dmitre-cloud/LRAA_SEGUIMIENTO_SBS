@@ -88,7 +88,7 @@ DATABASES = {
         'NAME': 'bd_lraa_seguimiento_sbs',
         'USER': 'lraa_ssbs',
         'PASSWORD': 'lraa1928',
-        'HOST': '172.31.1.72',
+        'HOST': 'lraasegsbs-bdlraaseguimientosbs-9xh7lx',
         'PORT': '3306',
     }
 }
