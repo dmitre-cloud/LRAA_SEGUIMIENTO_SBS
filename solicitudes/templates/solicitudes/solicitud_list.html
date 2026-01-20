@@ -21,8 +21,11 @@
         transition: all 0.2s ease;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
         border: none;
+        text-decoration: none;
+        min-width: 85px; /* Para que todos tengan el mismo ancho */
     }
 
     .btn-view { background-color: var(--info-soft); color: #00838f; }
@@ -31,7 +34,7 @@
     .btn-edit { background-color: var(--warning-soft); color: #f57f17; }
     .btn-edit:hover { background-color: #fbc02d; color: white; transform: translateY(-2px); }
 
-    .btn-delete { background-color: var(--danger-soft); color: #c62828; }
+    .btn-delete { background-color: var(--danger-soft); color: #c62828; min-width: 40px; } /* Más pequeño si solo es icono */
     .btn-delete:hover { background-color: #e53935; color: white; transform: translateY(-2px); }
 
     /* Estilo de la tabla */
@@ -54,19 +57,20 @@
         background-color: #fcfdfe !important;
     }
 
-    /* Badge de estado más elegante */
+    /* Badge de estado elegante */
     .status-badge {
         padding: 6px 12px;
         font-size: 0.75rem;
         font-weight: 600;
         border-radius: 6px;
+        display: inline-block;
     }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold" style="color: #1e293b;">Solicitudes</h2>
     <a href="{% url 'solicitud-create' %}" class="btn btn-primary shadow-sm" style="border-radius: 10px; padding: 10px 20px;">
-        <i class="bi bi-plus-lg me-2"></i>Nueva Solicitud
+        <i class="fas fa-plus me-2"></i>Nueva Solicitud
     </a>
 </div>
 
@@ -109,13 +113,13 @@
                         <td class="text-end pe-4">
                             <div class="d-flex justify-content-end gap-2">
                                 <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn-action-modern btn-view">
-                                    <i class="bi bi-eye"></i> Ver
+                                    <i class="fas fa-eye"></i> Ver
                                 </a>
                                 <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn-action-modern btn-edit">
-                                    <i class="bi bi-pencil-square"></i> Editar
+                                    <i class="fas fa-edit"></i> Editar
                                 </a>
-                                <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn-action-modern btn-delete">
-                                    <i class="bi bi-trash"></i>
+                                <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn-action-modern btn-delete" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
                                 </a>
                             </div>
                         </td>
@@ -136,13 +140,13 @@
     <ul class="pagination justify-content-center border-0">
         {% if page_obj.has_previous %}
             <li class="page-item"><a class="page-link border-0 text-dark bg-transparent" href="?page=1">Primera</a></li>
-            <li class="page-item"><a class="page-link border-0 shadow-sm rounded mx-1 text-dark" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-arrow-left"></i></a></li>
+            <li class="page-item"><a class="page-link border-0 shadow-sm rounded mx-1 text-dark" href="?page={{ page_obj.previous_page_number }}"><i class="fas fa-arrow-left"></i></a></li>
         {% endif %}
 
-        <li class="page-item active"><span class="page-link border-0 shadow-sm rounded mx-1 px-3 bg-primary">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+        <li class="page-item active"><span class="page-link border-0 shadow-sm rounded mx-1 px-3 bg-primary" style="background-color: #003366 !important;">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
 
         {% if page_obj.has_next %}
-            <li class="page-item"><a class="page-link border-0 shadow-sm rounded mx-1 text-dark" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-arrow-right"></i></a></li>
+            <li class="page-item"><a class="page-link border-0 shadow-sm rounded mx-1 text-dark" href="?page={{ page_obj.next_page_number }}"><i class="fas fa-arrow-right"></i></a></li>
             <li class="page-item"><a class="page-link border-0 text-dark bg-transparent" href="?page={{ page_obj.paginator.num_pages }}">Última</a></li>
         {% endif %}
     </ul>
