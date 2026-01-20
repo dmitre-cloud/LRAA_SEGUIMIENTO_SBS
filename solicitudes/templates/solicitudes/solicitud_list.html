@@ -4,69 +4,91 @@
 {% block title %}Listado de Solicitudes{% endblock %}
 
 {% block content %}
+<style>
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        color: #6c757d;
+        text-decoration: none;
+    }
+    .btn-view:hover { background-color: #0dcaf0; color: white; border-color: #0dcaf0; }
+    .btn-edit:hover { background-color: #ffc107; color: white; border-color: #ffc107; }
+    .btn-delete:hover { background-color: #dc3545; color: white; border-color: #dc3545; }
+    
+    /* Estilo para los badges redondos */
+    .badge-pill-custom {
+        padding: 0.5em 1em;
+        font-weight: 500;
+    }
+</style>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold text-secondary">Solicitudes de Bienes y Servicios</h2>
-    <a href="{% url 'solicitud-create' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
-        <i class="bi bi-plus-lg me-2"></i>Nueva Solicitud
+    <h2 class="fw-bold text-dark">Solicitudes de Bienes y Servicios</h2>
+    <a href="{% url 'solicitud-create' %}" class="btn btn-dark rounded-pill px-4 shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> Nueva Solicitud
     </a>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card shadow-sm border-0">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light">
-                    <tr>
-                        <th scope="col" class="ps-4 border-0 text-uppercase small fw-bold text-muted">Ref. Dep.</th>
-                        <th scope="col" class="border-0 text-uppercase small fw-bold text-muted">Descripción</th>
-                        <th scope="col" class="border-0 text-uppercase small fw-bold text-muted">Departamento</th>
-                        <th scope="col" class="border-0 text-uppercase small fw-bold text-muted">Monto (SBS)</th>
-                        <th scope="col" class="border-0 text-uppercase small fw-bold text-muted">Condición</th>
-                        <th scope="col" class="text-end pe-4 border-0 text-uppercase small fw-bold text-muted">Acciones</th>
+                    <tr class="text-muted small text-uppercase">
+                        <th scope="col" class="ps-4 py-3">Ref. Dep.</th>
+                        <th scope="col">Descripción</th>
+                        <th scope="col">Departamento</th>
+                        <th scope="col">Monto (SBS)</th>
+                        <th scope="col">Condición</th>
+                        <th scope="col" class="text-center pe-4">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for solicitud in solicitudes %}
                     <tr>
-                        <td class="ps-4 fw-bold text-dark">{{ solicitud.ref_departamento }}</td>
-                        <td class="text-muted">{{ solicitud.descripcion_pedido|truncatechars:50 }}</td>
-                        <td><span class="badge rounded-pill bg-light text-dark border">{{ solicitud.get_departamento_display }}</span></td>
-                        <td class="fw-bold">B/. {{ solicitud.monto_comprometido_sbs|intcomma }}</td>
+                        <td class="ps-4 fw-bold">{{ solicitud.ref_departamento }}</td>
+                        <td class="text-secondary">{{ solicitud.descripcion_pedido|truncatechars:45 }}</td>
+                        <td>
+                            <span class="badge bg-light text-dark border badge-pill-custom rounded-pill">
+                                {{ solicitud.get_departamento_display }}
+                            </span>
+                        </td>
+                        <td class="fw-bold text-dark">B/. {{ solicitud.monto_comprometido_sbs|intcomma }}</td>
                         <td>
                             {% with condicion=solicitud.seguimiento.get_condicion_display|default:"Sin Iniciar" %}
-                            <span class="badge rounded-pill 
+                            <span class="badge rounded-pill badge-pill-custom 
                                 {% if 'Iniciado' in condicion %}bg-info 
+                                {% elif 'Recorrido' in condicion %}bg-primary 
                                 {% elif 'Proceso' in condicion %}bg-warning text-dark 
-                                {% elif 'Completado' in condicion %}bg-success 
                                 {% else %}bg-secondary{% endif %}">
                                 {{ condicion }}
                             </span>
                             {% endwith %}
                         </td>
-                        <td class="text-end pe-4">
-                            <a href="{% url 'solicitud-detail' solicitud.pk %}" 
-                               class="btn btn-sm btn-light border rounded-circle shadow-sm mx-1" 
-                               title="Ver detalle">
-                                <i class="bi bi-eye text-info"></i>
-                            </a>
-                            <a href="{% url 'solicitud-update' solicitud.pk %}" 
-                               class="btn btn-sm btn-light border rounded-circle shadow-sm mx-1" 
-                               title="Editar">
-                                <i class="bi bi-pencil-square text-warning"></i>
-                            </a>
-                            <a href="{% url 'solicitud-delete' solicitud.pk %}" 
-                               class="btn btn-sm btn-light border rounded-circle shadow-sm mx-1" 
-                               title="Eliminar">
-                                <i class="bi bi-trash3 text-danger"></i>
-                            </a>
+                        <td class="text-center pe-4">
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn-action btn-view" title="Ver Detalle">
+                                    <i class="bi bi-eye-fill"></i>
+                                </a>
+                                <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn-action btn-edit" title="Editar">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
+                                <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn-action btn-delete" title="Eliminar">
+                                    <i class="bi bi-trash-fill"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <i class="bi bi-inbox text-muted d-block mb-2" style="font-size: 2rem;"></i>
-                            <p class="text-muted">No hay solicitudes registradas en este momento.</p>
-                        </td>
+                        <td colspan="6" class="text-center py-5 text-muted">No se encontraron solicitudes.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -76,21 +98,36 @@
 </div>
 
 {% if is_paginated %}
-<nav aria-label="Navegación de páginas" class="mt-4">
-    <ul class="pagination pagination-sm justify-content-center">
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
-            <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page=1">Primera</a></li>
-            <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a></li>
+            <li class="page-item">
+                <a class="page-link rounded-pill border-0 shadow-sm mx-1" href="?page=1">Primera</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link rounded-circle border-0 shadow-sm mx-1" href="?page={{ page_obj.previous_page_number }}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
         {% endif %}
 
-        <li class="page-item active"><span class="page-link border-0 shadow-sm mx-1 rounded-3 px-3">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+        <li class="page-item active">
+            <span class="page-link rounded-pill border-0 shadow mx-1 px-3">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
 
         {% if page_obj.has_next %}
-            <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a></li>
-            <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page={{ page_obj.paginator.num_pages }}">Última</a></li>
+            <li class="page-item">
+                <a class="page-link rounded-circle border-0 shadow-sm mx-1" href="?page={{ page_obj.next_page_number }}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link rounded-pill border-0 shadow-sm mx-1" href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+            </li>
         {% endif %}
     </ul>
 </nav>
 {% endif %}
-
 {% endblock %}
