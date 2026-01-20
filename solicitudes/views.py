@@ -9,28 +9,36 @@ from .models import Solicitud, SeguimientoCompra
 from .forms import SolicitudForm, SeguimientoCompraForm, SeguimientoFilterForm
 
 # --- Vistas para Solicitud ---
+from django.db.models import Q
+
 class SolicitudListView(LoginRequiredMixin, ListView):
     model = Solicitud
     template_name = 'solicitudes/solicitud_list.html'
     context_object_name = 'solicitudes'
     paginate_by = 10
-    ordering = ['-id']  # Mantiene las solicitudes más nuevas al principio
+    ordering = ['-id']  # Ordena por el más reciente
 
     def get_queryset(self):
         """
-        Filtra las solicitudes por departamento basándose en el rol del usuario.
+        Filtra por permisos de departamento y por término de búsqueda.
         """
         user = self.request.user
         queryset = super().get_queryset()
 
-        # Roles y departamentos con privilegios de ver todo
-        acceso_total_puestos = ['Asistente Administrativo']
-        acceso_total_deps = ['Dirección']
+        # --- Lógica de Permisos ---
+        job_position_con_acceso_total = ['Asistente Administrativo']
+        departamentos_con_acceso_total = ['Dirección']
 
-        # Si el usuario no cumple los requisitos de acceso total, filtramos por su departamento
-        if (user.job_position not in acceso_total_puestos and 
-            user.department not in acceso_total_deps):
+        if user.job_position not in job_position_con_acceso_total and user.department not in departamentos_con_acceso_total:
             queryset = queryset.filter(departamento=user.department)
+
+        # --- Lógica de Búsqueda ---
+        query = self.request.GET.get('q')
+        if query:
+            queryset = queryset.filter(
+                Q(descripcion_pedido__icontains=query) | 
+                Q(ref_departamento__icontains=query)
+            )
         
         return queryset
 

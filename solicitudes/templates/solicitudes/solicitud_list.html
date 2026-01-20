@@ -1,154 +1,102 @@
 {% extends "solicitudes/base.html" %}
+
 {% load humanize %}
 
 {% block title %}Listado de Solicitudes{% endblock %}
 
 {% block content %}
-<style>
-    :root {
-        --primary-soft: #eef2ff;
-        --info-soft: #e0f7fa;
-        --warning-soft: #fffde7;
-        --danger-soft: #ffebee;
-    }
-
-    /* Botones de acción estilo "Pill" con texto e icono */
-    .btn-action-modern {
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        border: none;
-        text-decoration: none;
-        min-width: 85px; /* Para que todos tengan el mismo ancho */
-    }
-
-    .btn-view { background-color: var(--info-soft); color: #00838f; }
-    .btn-view:hover { background-color: #00acc1; color: white; transform: translateY(-2px); }
-
-    .btn-edit { background-color: var(--warning-soft); color: #f57f17; }
-    .btn-edit:hover { background-color: #fbc02d; color: white; transform: translateY(-2px); }
-
-    .btn-delete { background-color: var(--danger-soft); color: #c62828; min-width: 40px; } /* Más pequeño si solo es icono */
-    .btn-delete:hover { background-color: #e53935; color: white; transform: translateY(-2px); }
-
-    /* Estilo de la tabla */
-    .table thead th {
-        background-color: #f8fafc;
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 0.05em;
-        color: #64748b;
-        padding: 15px;
-    }
-
-    .table tbody td {
-        padding: 15px;
-        vertical-align: middle;
-        border-bottom: 1px solid #f1f5f9;
-    }
-
-    .solicitud-row:hover {
-        background-color: #fcfdfe !important;
-    }
-
-    /* Badge de estado elegante */
-    .status-badge {
-        padding: 6px 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        border-radius: 6px;
-        display: inline-block;
-    }
-</style>
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold" style="color: #1e293b;">Solicitudes</h2>
-    <a href="{% url 'solicitud-create' %}" class="btn btn-primary shadow-sm" style="border-radius: 10px; padding: 10px 20px;">
-        <i class="fas fa-plus me-2"></i>Nueva Solicitud
-    </a>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Listado de Solicitudes de Bienes y Servicios</h2>
+    <a href="{% url 'solicitud-create' %}" class="btn btn-primary">Crear Nueva Solicitud</a>
 </div>
 
-<div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th class="ps-4">Referencia</th>
-                        <th>Descripción</th>
-                        <th>Departamento</th>
-                        <th>Monto</th>
-                        <th>Estado</th>
-                        <th class="text-end pe-4">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for solicitud in solicitudes %}
-                    <tr class="solicitud-row">
-                        <td class="ps-4 fw-bold text-primary">{{ solicitud.ref_departamento }}</td>
-                        <td class="text-muted small">{{ solicitud.descripcion_pedido|truncatechars:40 }}</td>
-                        <td>
-                            <span class="text-dark small fw-medium bg-light px-2 py-1 rounded">
-                                {{ solicitud.get_departamento_display }}
-                            </span>
-                        </td>
-                        <td class="fw-bold">B/. {{ solicitud.monto_comprometido_sbs|intcomma }}</td>
-                        <td>
-                            {% with condicion=solicitud.seguimiento.get_condicion_display|default:"Sin Iniciar" %}
-                            <span class="status-badge 
-                                {% if 'Iniciado' in condicion %}bg-info text-white
-                                {% elif 'Recorrido' in condicion %}bg-primary text-white
-                                {% elif 'Proceso' in condicion %}bg-warning text-dark
-                                {% else %}bg-secondary text-white{% endif %}">
-                                {{ condicion }}
-                            </span>
-                            {% endwith %}
-                        </td>
-                        <td class="text-end pe-4">
-                            <div class="d-flex justify-content-end gap-2">
-                                <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn-action-modern btn-view">
-                                    <i class="fas fa-eye"></i> Ver
-                                </a>
-                                <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn-action-modern btn-edit">
-                                    <i class="fas fa-edit"></i> Editar
-                                </a>
-                                <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn-action-modern btn-delete" title="Eliminar">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">No hay registros disponibles.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form method="GET" class="d-flex">
+            <input type="text" name="q" class="form-control me-2" placeholder="Buscar por descripción o referencia..." value="{{ request.GET.q|default:'' }}">
+            <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+            {% if request.GET.q %}
+                <a href="{% url 'solicitud-list' %}" class="btn btn-link">Limpiar</a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">Ref. Dep.</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Departamento</th>
+                    <th scope="col">Monto (SBS)</th>
+                    <th scope="col">Condición</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for solicitud in solicitudes %}
+                <tr>
+                    <th scope="row">{{ solicitud.ref_departamento }}</th>
+                    <td>{{ solicitud.descripcion_pedido|truncatechars:50 }}</td>
+                    <td>{{ solicitud.get_departamento_display }}</td>
+                    <td>B/. {{ solicitud.monto_comprometido_sbs|intcomma }}</td>
+                    <td>
+                        <span class="badge bg-secondary">{{ solicitud.seguimiento.get_condicion_display|default:"Sin Iniciar" }}</span>
+                    </td>
+                    <td>
+                        <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn btn-sm btn-info">Ver</a>
+                        <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                        <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No hay solicitudes registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
 {% if is_paginated %}
-<nav class="mt-4">
-    <ul class="pagination justify-content-center border-0">
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        
         {% if page_obj.has_previous %}
-            <li class="page-item"><a class="page-link border-0 text-dark bg-transparent" href="?page=1">Primera</a></li>
-            <li class="page-item"><a class="page-link border-0 shadow-sm rounded mx-1 text-dark" href="?page={{ page_obj.previous_page_number }}"><i class="fas fa-arrow-left"></i></a></li>
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Primera">
+                    <span aria-hidden="true">&laquo;&laquo; Primera</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Anterior</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Anterior</span></li>
         {% endif %}
 
-        <li class="page-item active"><span class="page-link border-0 shadow-sm rounded mx-1 px-3 bg-primary" style="background-color: #003366 !important;">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+        <li class="page-item active">
+            <span class="page-link">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
 
         {% if page_obj.has_next %}
-            <li class="page-item"><a class="page-link border-0 shadow-sm rounded mx-1 text-dark" href="?page={{ page_obj.next_page_number }}"><i class="fas fa-arrow-right"></i></a></li>
-            <li class="page-item"><a class="page-link border-0 text-dark bg-transparent" href="?page={{ page_obj.paginator.num_pages }}">Última</a></li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Siguiente</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Última">
+                    <span aria-hidden="true">Última &raquo;&raquo;</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
         {% endif %}
+
     </ul>
 </nav>
 {% endif %}
