@@ -5,49 +5,68 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Listado de Solicitudes de Bienes y Servicios</h2>
-    <a href="{% url 'solicitud-create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Crear Nueva Solicitud
+    <h2 class="fw-bold text-secondary">Solicitudes de Bienes y Servicios</h2>
+    <a href="{% url 'solicitud-create' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+        <i class="bi bi-plus-lg me-2"></i>Nueva Solicitud
     </a>
 </div>
 
-<div class="card shadow-sm">
+<div class="card border-0 shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
                     <tr>
-                        <th scope="col" class="ps-3">Ref. Dep.</th>
-                        <th scope="col">Descripción</th>
-                        <th scope="col">Departamento</th>
-                        <th scope="col">Monto (SBS)</th>
-                        <th scope="col">Condición</th>
-                        <th scope="col" class="text-center">Acciones</th>
+                        <th scope="col" class="ps-4 border-0 text-uppercase small fw-bold text-muted">Ref. Dep.</th>
+                        <th scope="col" class="border-0 text-uppercase small fw-bold text-muted">Descripción</th>
+                        <th scope="col" class="border-0 text-uppercase small fw-bold text-muted">Departamento</th>
+                        <th scope="col" class="border-0 text-uppercase small fw-bold text-muted">Monto (SBS)</th>
+                        <th scope="col" class="border-0 text-uppercase small fw-bold text-muted">Condición</th>
+                        <th scope="col" class="text-end pe-4 border-0 text-uppercase small fw-bold text-muted">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for solicitud in solicitudes %}
                     <tr>
-                        <th scope="row" class="ps-3">{{ solicitud.ref_departamento }}</th>
-                        <td>{{ solicitud.descripcion_pedido|truncatechars:50 }}</td>
-                        <td>{{ solicitud.get_departamento_display }}</td>
-                        <td>B/. {{ solicitud.monto_comprometido_sbs|intcomma }}</td>
+                        <td class="ps-4 fw-bold text-dark">{{ solicitud.ref_departamento }}</td>
+                        <td class="text-muted">{{ solicitud.descripcion_pedido|truncatechars:50 }}</td>
+                        <td><span class="badge rounded-pill bg-light text-dark border">{{ solicitud.get_departamento_display }}</span></td>
+                        <td class="fw-bold">B/. {{ solicitud.monto_comprometido_sbs|intcomma }}</td>
                         <td>
-                            <span class="badge bg-secondary">
-                                {{ solicitud.seguimiento.get_condicion_display|default:"Sin Iniciar" }}
+                            {% with condicion=solicitud.seguimiento.get_condicion_display|default:"Sin Iniciar" %}
+                            <span class="badge rounded-pill 
+                                {% if 'Iniciado' in condicion %}bg-info 
+                                {% elif 'Proceso' in condicion %}bg-warning text-dark 
+                                {% elif 'Completado' in condicion %}bg-success 
+                                {% else %}bg-secondary{% endif %}">
+                                {{ condicion }}
                             </span>
+                            {% endwith %}
                         </td>
-                        <td class="text-center">
-                            <div class="btn-group" role="group">
-                                <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn btn-sm btn-outline-info">Ver</a>
-                                <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn btn-sm btn-outline-warning">Editar</a>
-                                <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
-                            </div>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'solicitud-detail' solicitud.pk %}" 
+                               class="btn btn-sm btn-light border rounded-circle shadow-sm mx-1" 
+                               title="Ver detalle">
+                                <i class="bi bi-eye text-info"></i>
+                            </a>
+                            <a href="{% url 'solicitud-update' solicitud.pk %}" 
+                               class="btn btn-sm btn-light border rounded-circle shadow-sm mx-1" 
+                               title="Editar">
+                                <i class="bi bi-pencil-square text-warning"></i>
+                            </a>
+                            <a href="{% url 'solicitud-delete' solicitud.pk %}" 
+                               class="btn btn-sm btn-light border rounded-circle shadow-sm mx-1" 
+                               title="Eliminar">
+                                <i class="bi bi-trash3 text-danger"></i>
+                            </a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">No hay solicitudes registradas.</td>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-inbox text-muted d-block mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted">No hay solicitudes registradas en este momento.</p>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -58,31 +77,17 @@
 
 {% if is_paginated %}
 <nav aria-label="Navegación de páginas" class="mt-4">
-    <ul class="pagination justify-content-center">
+    <ul class="pagination pagination-sm justify-content-center">
         {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1">Primera</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
-            </li>
-        {% else %}
-            <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+            <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page=1">Primera</a></li>
+            <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a></li>
         {% endif %}
 
-        <li class="page-item active" aria-current="page">
-            <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-        </li>
+        <li class="page-item active"><span class="page-link border-0 shadow-sm mx-1 rounded-3 px-3">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
 
         {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a>
-            </li>
-        {% else %}
-            <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+            <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a></li>
+            <li class="page-item"><a class="page-link border-0 shadow-sm mx-1 rounded-3" href="?page={{ page_obj.paginator.num_pages }}">Última</a></li>
         {% endif %}
     </ul>
 </nav>
