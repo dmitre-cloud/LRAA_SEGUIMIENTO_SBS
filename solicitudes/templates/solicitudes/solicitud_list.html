@@ -1,0 +1,91 @@
+{% extends "solicitudes/base.html" %}
+{% load humanize %}
+
+{% block title %}Listado de Solicitudes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Listado de Solicitudes de Bienes y Servicios</h2>
+    <a href="{% url 'solicitud-create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Crear Nueva Solicitud
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-3">Ref. Dep.</th>
+                        <th scope="col">Descripción</th>
+                        <th scope="col">Departamento</th>
+                        <th scope="col">Monto (SBS)</th>
+                        <th scope="col">Condición</th>
+                        <th scope="col" class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for solicitud in solicitudes %}
+                    <tr>
+                        <th scope="row" class="ps-3">{{ solicitud.ref_departamento }}</th>
+                        <td>{{ solicitud.descripcion_pedido|truncatechars:50 }}</td>
+                        <td>{{ solicitud.get_departamento_display }}</td>
+                        <td>B/. {{ solicitud.monto_comprometido_sbs|intcomma }}</td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ solicitud.seguimiento.get_condicion_display|default:"Sin Iniciar" }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn btn-sm btn-outline-info">Ver</a>
+                                <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn btn-sm btn-outline-warning">Editar</a>
+                                <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No hay solicitudes registradas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Navegación de páginas" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">Primera</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+        {% endif %}
+
+        <li class="page-item active" aria-current="page">
+            <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        </li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}

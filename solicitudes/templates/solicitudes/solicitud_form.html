@@ -1,0 +1,37 @@
+{% extends "solicitudes/base.html" %}
+
+{% block title %}
+    {% if object %}
+        Editar Solicitud #{{ object.id }}
+    {% else %}
+        Crear Nueva Solicitud
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>
+                    {% if object %}
+                        Editar Solicitud
+                    {% else %}
+                        Crear Nueva Solicitud
+                    {% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <a href="{% url 'solicitud-list' %}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

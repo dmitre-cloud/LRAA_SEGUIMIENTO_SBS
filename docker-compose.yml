@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    command: sh -c "python manage.py collectstatic --noinput && gunicorn lraa_project.wsgi:application --bind 0.0.0.0:8058"
+    volumes:
+      - .:/app
+    ports:
+      - "8058:8058"
+    depends_on:
+      - db
+    
+    restart: always
+  db:
+    image: mariadb:11
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: lraa1928 # Contraseña para el usuario root de MariaDB.
+      MARIADB_DATABASE: bd_lraa_seguimiento_sbs # Nombre de la base de datos a crear.
+      MARIADB_USER: lraa_ssbs # Nombre del usuario de la base de datos.
+      MARIADB_PASSWORD: lraa1928 # Contraseña para el usuario de la base de datos.
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    networks:
+      - app_network
+
+volumes:
+  db_data: #define volumes

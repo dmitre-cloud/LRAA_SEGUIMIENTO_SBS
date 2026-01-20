@@ -1,0 +1,26 @@
+{% extends "solicitudes/base.html" %}
+
+{% block title %}Confirmar Eliminación{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-header">
+                <h3>Confirmar Eliminación</h3>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    ¿Estás seguro de que quieres eliminar la solicitud para 
+                    "<strong>{{ object.descripcion_pedido|truncatechars:40 }}</strong>"?
+                </p>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                    <a href="{% url 'solicitud-detail' object.pk %}" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
