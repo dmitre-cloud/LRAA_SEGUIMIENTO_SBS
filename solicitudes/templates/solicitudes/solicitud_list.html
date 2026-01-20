@@ -5,90 +5,124 @@
 
 {% block content %}
 <style>
-    .btn-action {
-        width: 35px;
-        height: 35px;
+    :root {
+        --primary-soft: #eef2ff;
+        --info-soft: #e0f7fa;
+        --warning-soft: #fffde7;
+        --danger-soft: #ffebee;
+    }
+
+    /* Botones de acción estilo "Pill" con texto e icono */
+    .btn-action-modern {
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        transition: all 0.3s ease;
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        color: #6c757d;
-        text-decoration: none;
+        gap: 6px;
+        border: none;
     }
-    .btn-view:hover { background-color: #0dcaf0; color: white; border-color: #0dcaf0; }
-    .btn-edit:hover { background-color: #ffc107; color: white; border-color: #ffc107; }
-    .btn-delete:hover { background-color: #dc3545; color: white; border-color: #dc3545; }
-    
-    /* Estilo para los badges redondos */
-    .badge-pill-custom {
-        padding: 0.5em 1em;
-        font-weight: 500;
+
+    .btn-view { background-color: var(--info-soft); color: #00838f; }
+    .btn-view:hover { background-color: #00acc1; color: white; transform: translateY(-2px); }
+
+    .btn-edit { background-color: var(--warning-soft); color: #f57f17; }
+    .btn-edit:hover { background-color: #fbc02d; color: white; transform: translateY(-2px); }
+
+    .btn-delete { background-color: var(--danger-soft); color: #c62828; }
+    .btn-delete:hover { background-color: #e53935; color: white; transform: translateY(-2px); }
+
+    /* Estilo de la tabla */
+    .table thead th {
+        background-color: #f8fafc;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        padding: 15px;
+    }
+
+    .table tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .solicitud-row:hover {
+        background-color: #fcfdfe !important;
+    }
+
+    /* Badge de estado más elegante */
+    .status-badge {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 6px;
     }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold text-dark">Solicitudes de Bienes y Servicios</h2>
-    <a href="{% url 'solicitud-create' %}" class="btn btn-dark rounded-pill px-4 shadow-sm">
-        <i class="bi bi-plus-lg me-1"></i> Nueva Solicitud
+    <h2 class="fw-bold" style="color: #1e293b;">Solicitudes</h2>
+    <a href="{% url 'solicitud-create' %}" class="btn btn-primary shadow-sm" style="border-radius: 10px; padding: 10px 20px;">
+        <i class="bi bi-plus-lg me-2"></i>Nueva Solicitud
     </a>
 </div>
 
-<div class="card shadow-sm border-0">
+<div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
-                    <tr class="text-muted small text-uppercase">
-                        <th scope="col" class="ps-4 py-3">Ref. Dep.</th>
-                        <th scope="col">Descripción</th>
-                        <th scope="col">Departamento</th>
-                        <th scope="col">Monto (SBS)</th>
-                        <th scope="col">Condición</th>
-                        <th scope="col" class="text-center pe-4">Acciones</th>
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Referencia</th>
+                        <th>Descripción</th>
+                        <th>Departamento</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th class="text-end pe-4">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for solicitud in solicitudes %}
-                    <tr>
-                        <td class="ps-4 fw-bold">{{ solicitud.ref_departamento }}</td>
-                        <td class="text-secondary">{{ solicitud.descripcion_pedido|truncatechars:45 }}</td>
+                    <tr class="solicitud-row">
+                        <td class="ps-4 fw-bold text-primary">{{ solicitud.ref_departamento }}</td>
+                        <td class="text-muted small">{{ solicitud.descripcion_pedido|truncatechars:40 }}</td>
                         <td>
-                            <span class="badge bg-light text-dark border badge-pill-custom rounded-pill">
+                            <span class="text-dark small fw-medium bg-light px-2 py-1 rounded">
                                 {{ solicitud.get_departamento_display }}
                             </span>
                         </td>
-                        <td class="fw-bold text-dark">B/. {{ solicitud.monto_comprometido_sbs|intcomma }}</td>
+                        <td class="fw-bold">B/. {{ solicitud.monto_comprometido_sbs|intcomma }}</td>
                         <td>
                             {% with condicion=solicitud.seguimiento.get_condicion_display|default:"Sin Iniciar" %}
-                            <span class="badge rounded-pill badge-pill-custom 
-                                {% if 'Iniciado' in condicion %}bg-info 
-                                {% elif 'Recorrido' in condicion %}bg-primary 
-                                {% elif 'Proceso' in condicion %}bg-warning text-dark 
-                                {% else %}bg-secondary{% endif %}">
+                            <span class="status-badge 
+                                {% if 'Iniciado' in condicion %}bg-info text-white
+                                {% elif 'Recorrido' in condicion %}bg-primary text-white
+                                {% elif 'Proceso' in condicion %}bg-warning text-dark
+                                {% else %}bg-secondary text-white{% endif %}">
                                 {{ condicion }}
                             </span>
                             {% endwith %}
                         </td>
-                        <td class="text-center pe-4">
-                            <div class="d-flex justify-content-center gap-2">
-                                <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn-action btn-view" title="Ver Detalle">
-                                    <i class="bi bi-eye-fill"></i>
+                        <td class="text-end pe-4">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn-action-modern btn-view">
+                                    <i class="bi bi-eye"></i> Ver
                                 </a>
-                                <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn-action btn-edit" title="Editar">
-                                    <i class="bi bi-pencil-fill"></i>
+                                <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn-action-modern btn-edit">
+                                    <i class="bi bi-pencil-square"></i> Editar
                                 </a>
-                                <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn-action btn-delete" title="Eliminar">
-                                    <i class="bi bi-trash-fill"></i>
+                                <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn-action-modern btn-delete">
+                                    <i class="bi bi-trash"></i>
                                 </a>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">No se encontraron solicitudes.</td>
+                        <td colspan="6" class="text-center py-5 text-muted">No hay registros disponibles.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -98,34 +132,18 @@
 </div>
 
 {% if is_paginated %}
-<nav aria-label="Page navigation" class="mt-4">
-    <ul class="pagination justify-content-center">
+<nav class="mt-4">
+    <ul class="pagination justify-content-center border-0">
         {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link rounded-pill border-0 shadow-sm mx-1" href="?page=1">Primera</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link rounded-circle border-0 shadow-sm mx-1" href="?page={{ page_obj.previous_page_number }}">
-                    <i class="bi bi-chevron-left"></i>
-                </a>
-            </li>
+            <li class="page-item"><a class="page-link border-0 text-dark bg-transparent" href="?page=1">Primera</a></li>
+            <li class="page-item"><a class="page-link border-0 shadow-sm rounded mx-1 text-dark" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-arrow-left"></i></a></li>
         {% endif %}
 
-        <li class="page-item active">
-            <span class="page-link rounded-pill border-0 shadow mx-1 px-3">
-                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-            </span>
-        </li>
+        <li class="page-item active"><span class="page-link border-0 shadow-sm rounded mx-1 px-3 bg-primary">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
 
         {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link rounded-circle border-0 shadow-sm mx-1" href="?page={{ page_obj.next_page_number }}">
-                    <i class="bi bi-chevron-right"></i>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link rounded-pill border-0 shadow-sm mx-1" href="?page={{ page_obj.paginator.num_pages }}">Última</a>
-            </li>
+            <li class="page-item"><a class="page-link border-0 shadow-sm rounded mx-1 text-dark" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-arrow-right"></i></a></li>
+            <li class="page-item"><a class="page-link border-0 text-dark bg-transparent" href="?page={{ page_obj.paginator.num_pages }}">Última</a></li>
         {% endif %}
     </ul>
 </nav>
