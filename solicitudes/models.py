@@ -131,6 +131,7 @@ class SeguimientoCompra(models.Model):
         ('Habiles', 'Días Hábiles'),
     ]
     STATUS_FINAL_CHOICES = [
+        ('OC - POR ENTREGAR', 'OC - POR ENTREGAR'),
         ('OC - ENTREGADA ***(ENTREGA TOTAL)*** COMPLETADA.', 'OC - ENTREGADA ***(ENTREGA TOTAL)*** COMPLETADA.'),
         ('OC - PENDIENTE POR ENTREGAR ***(ENTREGA PARCIAL):*** Próxima a completarse.', 'OC - PENDIENTE POR ENTREGAR ***(ENTREGA PARCIAL):*** Próxima a completarse.'),
         ('OC - SERVICIO REALIZADO ***(ENTREGA TOTAL)***COMPLETADA.', 'OC - SERVICIO REALIZADO ***(ENTREGA TOTAL)***COMPLETADA.'),
@@ -216,3 +217,16 @@ class SeguimientoCompra(models.Model):
     class Meta:
         verbose_name = "Seguimiento de Compra"
         verbose_name_plural = "Seguimientos de Compras"
+    
+    def get_condicion_color(self):
+        """Retorna el color de Bootstrap según el estado"""
+        colores = {
+            'recorrido': 'warning text-dark', # Amarillo
+            'ingresado_v3': 'primary',       # Azul
+            'evaluado': 'info text-dark',    # Celeste
+            'refrendado': 'success',         # Verde
+            'anulado': 'danger',             # Rojo
+            'finalizado': 'dark',            # Negro/Gris oscuro
+        }
+        # Retorna el color o 'secondary' si no encuentra el estado
+        return colores.get(self.condicion, 'secondary')
