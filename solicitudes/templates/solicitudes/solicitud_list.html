@@ -1,21 +1,25 @@
 {% extends "solicitudes/base.html" %}
+
 {% load humanize %}
 
 {% block title %}Listado de Solicitudes{% endblock %}
 
 {% block content %}
 <style>
-    /* Colores de texto y grosor para las columnas específicas */
-    .col-d { color: #0d6efd; font-weight: bold; } /* Dirección: Azul */
-    .col-q { color: #fd7e14; font-weight: bold; } /* Química: Naranja */
-    .col-m { color: #198754; font-weight: bold; } /* Microbiología: Verde */
-
-    /* Opcional: Un borde lateral sutil para identificar la fila entera */
-    .border-d { border-left: 5px solid #0d6efd !important; }
-    .border-q { border-left: 5px solid #fd7e14 !important; }
-    .border-m { border-left: 5px solid #198754 !important; }
+    .ref-naranja { background-color: #FF8C00 !important; color: white; } /* Orange */
+    .ref-turquesa { background-color: #40E0D0 !important; color: white; } /* Turquoise */
+    .ref-morado { background-color: #800080 !important; color: white; }  /* Purple */
+    
+    /* Para que el badge se vea bien dentro de la tabla */
+    .badge-ref {
+        padding: 0.5em 0.8em;
+        border-radius: 4px;
+        font-weight: bold;
+        display: inline-block;
+        min-width: 60px;
+        text-align: center;
+    }
 </style>
-
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Listado de Solicitudes de Bienes y Servicios</h2>
     <a href="{% url 'solicitud-create' %}" class="btn btn-primary">Crear Nueva Solicitud</a>
@@ -33,10 +37,10 @@
     </div>
 </div>
 
-<div class="card shadow-sm">
+<div class="card">
     <div class="card-body">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+        <table class="table table-hover">
+            <thead>
                 <tr>
                     <th scope="col">Ref. Dep.</th>
                     <th scope="col">Descripción</th>
@@ -48,37 +52,31 @@
             </thead>
             <tbody>
                 {% for solicitud in solicitudes %}
-                {# Extraemos la inicial: 'd', 'q' o 'm' #}
-                {% with prefix=solicitud.ref_departamento|slice:":1"|lower %}
                 <tr>
-                    <th scope="row" class="col-{{ prefix }}">
-                        {{ solicitud.ref_departamento }}
-                    </th>
-                    <td class="col-{{ prefix }}">
-                        {{ solicitud.descripcion_pedido|truncatechars:50 }}
-                    </td>
-                    <td class="col-{{ prefix }}">
-                        {{ solicitud.get_departamento_display }}
-                    </td>
-                    
-                    <td class="text-nowrap">B/. {{ solicitud.monto_comprometido_sbs|intcomma }}</td>
-                    <td>
-                        <span class="badge bg-{{ solicitud.seguimiento.get_condicion_color|default:'secondary' }}">
-                            {{ solicitud.seguimiento.get_condicion_display|default:"Sin Iniciar" }}
+                    <th scope="row">
+                        <span class="badge-ref 
+                            {% if solicitud.ref_departamento|slice:':1' == 'D' %}ref-naranja
+                            {% elif solicitud.ref_departamento|slice:':1' == 'Q' %}ref-turquesa
+                            {% elif solicitud.ref_departamento|slice:':1' == 'M' %}ref-morado
+                            {% else %}bg-secondary text-white{% endif %}">
+                            {{ solicitud.ref_departamento }}
                         </span>
+                    </th>
+                    <td>{{ solicitud.descripcion_pedido|truncatechars:50 }}</td>
+                    <td>{{ solicitud.get_departamento_display }}</td>
+                    <td>B/. {{ solicitud.monto_comprometido_sbs|intcomma }}</td>
+                    <td>
+                        <span class="badge bg-secondary">{{ solicitud.seguimiento.get_condicion_display|default:"Sin Iniciar" }}</span>
                     </td>
-                    <td class="text-nowrap">
-                        <div class="btn-group" role="group">
-                            <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn btn-sm btn-info text-white">Ver</a>
-                            <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn btn-sm btn-warning">Editar</a>
-                            <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
-                        </div>
+                    <td>
+                        <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn btn-sm btn-info">Ver</a>
+                        <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                        <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
                     </td>
                 </tr>
-                {% endwith %}
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="text-center py-4 text-muted">No hay solicitudes registradas.</td>
+                    <td colspan="6" class="text-center">No hay solicitudes registradas.</td>
                 </tr>
                 {% endfor %}
             </tbody>
