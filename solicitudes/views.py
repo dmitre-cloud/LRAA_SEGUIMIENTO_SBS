@@ -15,15 +15,13 @@ class SolicitudListView(LoginRequiredMixin, ListView):
     model = Solicitud
     template_name = 'solicitudes/solicitud_list.html'
     context_object_name = 'solicitudes'
-    paginate_by = 10
-    ordering = ['-id']  # Ordena por el más reciente
+    paginate_by = 15
+    ordering = ['-id']
 
     def get_queryset(self):
-        """
-        Filtra por permisos de departamento y por término de búsqueda.
-        """
         user = self.request.user
-        queryset = super().get_queryset()
+        # Optimizamos con select_related('seguimiento')
+        queryset = super().get_queryset().select_related('seguimiento')
 
         # --- Lógica de Permisos ---
         job_position_con_acceso_total = ['Asistente Administrativo']
@@ -37,7 +35,9 @@ class SolicitudListView(LoginRequiredMixin, ListView):
         if query:
             queryset = queryset.filter(
                 Q(descripcion_pedido__icontains=query) | 
-                Q(ref_departamento__icontains=query)
+                Q(ref_departamento__icontains=query) |
+                # OPCIONAL: Permitir buscar también por número de SBS
+                Q(seguimiento__sbs_numero__icontains=query) 
             )
         
         return queryset
