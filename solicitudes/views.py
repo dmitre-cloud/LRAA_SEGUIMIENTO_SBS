@@ -151,7 +151,7 @@ class SeguimientoReportView(LoginRequiredMixin, ListView):
     model = SeguimientoCompra
     template_name = 'solicitudes/seguimiento_report.html'
     context_object_name = 'seguimientos'
-    paginate_by = 20
+    paginate_by = 15
 
     def get_queryset(self):
         """
