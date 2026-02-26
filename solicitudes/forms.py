@@ -8,7 +8,7 @@ class SolicitudForm(forms.ModelForm):
         # 👈 AGREGAMOS 'ref_departamento' a la lista de excluidos
         exclude = ('solicitante', 'ref_departamento') 
         widgets = {
-            'descripcion_pedido': forms.Textarea(attrs={'rows': 3}),
+            'descripcion_pedido': forms.Textarea(attrs={'rows': 7}),
             'monto_comprometido_sbs': forms.NumberInput(attrs={'placeholder': 'Ej: 1500.50'}),
         }
         
