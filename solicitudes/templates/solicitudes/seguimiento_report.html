@@ -127,7 +127,7 @@
                             <th>Departamento</th>
                             <th>Descripción</th>
                             <th>Condición</th>
-                            <th>Status Final</th>
+                            <th>SBS</th> <th>Status Final</th>
                             <th>Tipo</th>
                             <th>Proveedor</th>
                             <th>Monto OC</th>
@@ -149,6 +149,9 @@
                             
                             <td><span class="badge bg-secondary">{{ seguimiento.get_condicion_display }}</span></td>
                             
+                            <td>
+                                <strong>{{ seguimiento.sbs_numero|default:"--" }}</strong>
+                            </td>
                             <td><span class="badge bg-info text-dark">{{ seguimiento.get_status_final_compra_display|truncatechars:30|default:"N/A" }}</span></td>
                             
                             <td>{{ seguimiento.solicitud.get_tipo_compra_display }}</td>
@@ -164,12 +167,6 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="9" class="text-center py-4 text-muted">
-                                No se encontraron seguimientos que coincidan con los filtros.
-                            </td>
-                        </tr>
-                        {% endfor %}
                     </tbody>
 
                     {% if seguimientos %}
