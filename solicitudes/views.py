@@ -15,7 +15,7 @@ class SolicitudListView(LoginRequiredMixin, ListView):
     model = Solicitud
     template_name = 'solicitudes/solicitud_list.html'
     context_object_name = 'solicitudes'
-    paginate_by = 15
+    paginate_by = 5
     ordering = ['-id']
 
     def get_queryset(self):
