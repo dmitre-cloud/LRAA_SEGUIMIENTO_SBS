@@ -60,7 +60,7 @@
                             <td><strong>{{ seguimiento.sbs_numero|default:"--" }}</strong></td>
                             <td>{{ seguimiento.oc_numero|default:"--" }}</td>
                             <td title="{{ seguimiento.solicitud.descripcion_pedido }}">
-                                {{ seguimiento.solicitud.descripcion_pedido|truncatechars:45|default:"--" }}
+                                {{ seguimiento.solicitud.descripcion_pedido|default:"--" }}
                             </td>
                             <td>{{ seguimiento.get_tipo_entrega_display|default:"--" }}</td>
                             <td>{{ seguimiento.proveedor|truncatechars:25|default:"--" }}</td>
@@ -109,7 +109,6 @@
         const printBtn = document.getElementById('print-table-btn');
         const tableSection = document.getElementById('report-table-section');
 
-        // Lógica para detectar si ya estamos en la página de "Solo Impresión"
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('print')) {
             generarImpresionDirecta();
@@ -117,12 +116,8 @@
 
         if (printBtn) {
             printBtn.addEventListener('click', function() {
-                // Obtenemos la URL actual con todos los filtros aplicados
                 const currentUrl = new URL(window.location.href);
-                // Añadimos el parámetro para desactivar paginación
                 currentUrl.searchParams.set('print', '1');
-                
-                // Abrimos esa URL en una nueva pestaña
                 window.open(currentUrl.toString(), '_blank');
             });
         }
@@ -139,31 +134,81 @@
                 <head>
                     <meta charset="UTF-8">
                     <style>
-                        @page { size: landscape; margin: 15mm 10mm; }
-                        body { font-family: 'Arial', sans-serif; font-size: 11px; color: #000; margin: 0; }
-                        .print-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+                        /* Configuración de página y contadores */
+                        @page { 
+                            size: landscape; 
+                            margin: 15mm 10mm 20mm 10mm; 
+                        }
+                        
+                        body { 
+                            font-family: 'Arial', sans-serif; 
+                            font-size: 10px; 
+                            color: #000; 
+                            margin: 0; 
+                            counter-reset: page; /* Inicializa el contador de páginas */
+                        }
+
+                        /* Encabezado que se repite si es necesario (opcional) */
+                        .print-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
                         .header-logo { width: 300px; }
                         .header-logo img { max-width: 100%; max-height: 55px; }
-                        .header-center { text-align: center; font-weight: bold; font-size: 12px; flex-grow: 1; }
-                        .header-right { font-size: 12px; font-weight: bold; width: 50px; text-align: right; }
-                        table { width: 100%; border-collapse: collapse; font-size: 10px; }
-                        th, td { border: 1px solid #000; padding: 6px; }
-                        thead th, tfoot td { background-color: #fff !important; color: #000 !important; font-weight: bold; }
-                        thead th:not(:nth-child(4)) {
+                        .header-center { text-align: center; font-weight: bold; font-size: 11px; flex-grow: 1; margin-top: 10px; }
+                        
+                        /* Estructura de la Tabla */
+                        table { 
+                            width: 100%; 
+                            border-collapse: collapse; 
+                            table-layout: fixed; /* FUERZA A QUE LAS COLUMNAS RESPETEN EL ANCHO */
+                            word-wrap: break-word;
+                        }
+                        
+                        th, td { 
+                            border: 1px solid #000; 
+                            padding: 4px; 
+                            overflow: hidden;
+                            vertical-align: middle;
+                        }
+
+                        /* Definición de anchos de columna para que todo quepa */
+                        .col-ref { width: 5%; }
+                        .col-sbs { width: 8%; }
+                        .col-oc { width: 8%; }
+                        .col-desc { width: 35%; }
+                        .col-entrega { width: 10%; }
+                        .col-prov { width: 24%; }
+                        .col-monto { width: 10%; }
+
+                        thead th { background-color: #e9ecef !important; font-weight: bold; text-align: center; }
+                        
+                        /* Estilo vertical para ahorrar espacio horizontal */
+                        .v-text {
                             writing-mode: vertical-rl;
                             transform: rotate(180deg);
-                            height: 160px;
+                            height: 120px;
                             white-space: nowrap;
-                            text-align: left;
-                            vertical-align: middle;
-                            padding: 10px 5px;
-                            background-color: #e9ecef !important;
+                            padding: 5px;
                         }
-                        thead th:nth-child(4) { vertical-align: bottom; text-align: center; background-color: #e9ecef !important; }
-                        td:not(:nth-child(4)):not(:nth-child(7)) { text-align: center; }
-                        td:nth-child(4) { text-align: left; }
-                        td:nth-child(7) { text-align: right; }
-                        .print-footer { display: flex; justify-content: space-between; font-size: 10px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; }
+
+                        td:nth-child(7) { text-align: right; } /* Columna de Monto */
+                        
+                        /* FOOTER FIJO PARA PAGINACIÓN */
+                        .print-footer {
+                            position: fixed;
+                            bottom: -10mm;
+                            left: 0;
+                            right: 0;
+                            display: flex;
+                            justify-content: space-between;
+                            font-size: 9px;
+                            border-top: 1px solid #000;
+                            padding-top: 5px;
+                        }
+
+                        /* Generador de número de página */
+                        .page-number:after {
+                            counter-increment: page;
+                            content: "PÁGINA " counter(page);
+                        }
                     </style>
                 </head>
                 <body>
@@ -172,16 +217,36 @@
                         <div class="header-center">
                             REPORTE DE SEGUIMIENTO DE LAS<br>
                             SOLICITUDES DE BIENES Y SERVICIOS DEL<br>
-                            LABORORATORIO DE REFERENCIA DE ALIMENTOS Y AGUAS
+                            LABORATORIO DE REFERENCIA DE ALIMENTOS Y AGUAS
                         </div>
-                        <div class="header-right">1</div>
+                        <div style="width: 50px;"></div>
                     </div>
-                    ${tableSection.innerHTML}
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="col-ref"><div class="v-text"># REFERENCIA</div></th>
+                                <th class="col-sbs"><div class="v-text">NÚMERO DE SBS</div></th>
+                                <th class="col-oc"><div class="v-text">NÚMERO DE ORDEN DE COMPRA</div></th>
+                                <th class="col-desc">DESCRIPCIÓN</th>
+                                <th class="col-entrega"><div class="v-text">TIPO DE ENTREGA</div></th>
+                                <th class="col-prov">PROVEEDOR</th>
+                                <th class="col-monto"><div class="v-text">B/. MONTO TOTAL</div></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Array.from(tableSection.querySelectorAll('tbody tr')).map(tr => tr.outerHTML).join('')}
+                        </tbody>
+                        <tfoot>
+                            ${tableSection.querySelector('tfoot') ? tableSection.querySelector('tfoot').innerHTML : ''}
+                        </tfoot>
+                    </table>
+
                     <div class="print-footer">
                         <div>Impreso por: {{ request.user.get_full_name|default:request.user.username }}</div>
                         <div>Fecha: ${fechaStr}</div>
-                        <div>PÁGINA 1 DE 1 DE ${anioActual}</div>
-                    </div>
+                        <div class="page-number"></div> </div>
+
                     <script>
                         window.onload = function() {
                             setTimeout(function() {
@@ -193,7 +258,6 @@
                 </body>
                 </html>
             `;
-            // Escribimos el contenido en el documento actual (que es el de la nueva pestaña)
             document.open();
             document.write(printWindowHtml);
             document.close();
