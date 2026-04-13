@@ -1,72 +1,16 @@
 {% extends "solicitudes/base.html" %}
 
 {% load humanize %}
-
-{% block title %}Reporte de Seguimientos{% endblock %}
+{% load static %} {% block title %}Reporte de Seguimientos{% endblock %}
 
 {% block content %}
 <style>
-    /* Estilos para ocultar elementos que no queremos en la impresión */
+    /* Ocultar elementos en la impresión nativa (Ctrl+P) por si el usuario no usa el botón */
     @media print {
-        body * {
-            visibility: hidden;
-            overflow: visible !important;
-        }
-        
-        #report-table-section, #report-table-section * {
-            visibility: visible;
-        }
-
-        #report-table-section {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
-        .card, .card-header, .card-body, .container {
-            box-shadow: none !important;
-            border: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 100% !important;
-        }
-        
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10pt;
-        }
-
-        .table thead tr {
-            -webkit-print-color-adjust: exact; 
-            print-color-adjust: exact;
-            background-color: #343a40 !important;
-            color: white !important;
-        }
-
-        .table th, .table td {
-            border: 1px solid #dee2e6;
-            padding: 0.5rem;
-        }
-        
-        .table-striped tbody tr:nth-of-type(odd) {
-            background-color: transparent !important;
-        }
-        
-        .no-print {
-            display: none !important;
-        }
-
-        .badge {
-            background-color: transparent !important;
-            color: #212529 !important;
-            border: 1px solid #ced4da;
-            padding: .25em .4em;
-            font-weight: normal;
-        }
+        body * { visibility: hidden; }
+        #report-table-section, #report-table-section * { visibility: visible; }
+        #report-table-section { position: absolute; left: 0; top: 0; width: 100%; }
+        .no-print { display: none !important; }
     }
 </style>
 
@@ -87,32 +31,26 @@
                         {{ filter_form.ref_departamento.label_tag }}
                         {{ filter_form.ref_departamento }}
                     </div>
-
                     <div class="col-md-2">
                         {{ filter_form.anio.label_tag }}
                         {{ filter_form.anio }}
                     </div>
-
                     <div class="col-md-2">
                         {{ filter_form.condicion.label_tag }}
                         {{ filter_form.condicion }}
                     </div>
-                    
                     <div class="col-md-2">
                         {{ filter_form.status_final_compra.label_tag }}
                         {{ filter_form.status_final_compra }}
                     </div>
-                    
                     <div class="col-md-2">
                         {{ filter_form.tipo_compra.label_tag }}
                         {{ filter_form.tipo_compra }}
                     </div>
-                    
                     <div class="col-md-2">
                         {{ filter_form.proveedor.label_tag }}
                         {{ filter_form.proveedor }}
                     </div>
-                    
                     <div class="col-md-12 mt-3 d-grid"> 
                         <button type="submit" class="btn btn-primary">🔎 Filtrar Resultados</button>
                     </div>
@@ -120,10 +58,10 @@
             </form>
 
             <div class="table-responsive" id="report-table-section">
-                <table class="table table-striped table-hover table-sm align-middle">
+                <table class="table table-striped table-hover table-sm align-middle" id="main-data-table">
                     <thead class="table-dark">
                         <tr>
-                            <th>REFERENCIA</th> 
+                            <th># REFERENCIA</th> 
                             <th>NÚMERO DE SBS</th>
                             <th>NÚMERO DE ORDEN DE COMPRA</th>
                             <th>DESCRIPCIÓN</th>
@@ -138,29 +76,23 @@
                             <td class="fw-bold text-primary">
                                 {{ seguimiento.solicitud.ref_departamento|default:seguimiento.solicitud.id }}
                             </td>
-                            
                             <td>
                                 <strong>{{ seguimiento.sbs_numero|default:"--" }}</strong>
                             </td>
-                            
                             <td>
                                 {{ seguimiento.oc_numero|default:"--" }}
                             </td>
-                            
                             <td title="{{ seguimiento.solicitud.descripcion_pedido }}">
                                 {{ seguimiento.solicitud.descripcion_pedido|truncatechars:35|default:"--" }}
                             </td>
-                            
                             <td>
                                 {{ seguimiento.get_tipo_entrega_display|default:"--" }}
                             </td>
-                            
                             <td>
                                 {{ seguimiento.proveedor|truncatechars:20|default:"--" }}
                             </td>
-                            
                             <td class="text-end">
-                                B/. {{ seguimiento.monto_oc|floatformat:2|default:"0.00"|intcomma }}
+                                {{ seguimiento.monto_oc|floatformat:2|default:"0.00"|intcomma }}
                             </td>
                         </tr>
                         {% empty %}
@@ -171,11 +103,10 @@
                         </tr>
                         {% endfor %}
                     </tbody>
-
                     {% if seguimientos %}
                     <tfoot class="table-dark">
                         <tr>
-                            <td colspan="6" class="text-end px-3"><strong>MONTO TOTAL:</strong></td>
+                            <td colspan="6" class="text-end px-3"><strong>TOTAL MONTO OC:</strong></td>
                             <td class="text-end"><strong>B/. {{ total_monto_oc|floatformat:2|intcomma }}</strong></td>
                         </tr>
                     </tfoot>
@@ -217,42 +148,242 @@
         const printBtn = document.getElementById('print-table-btn');
         const tableSection = document.getElementById('report-table-section');
 
+        // Función auxiliar para obtener el texto seleccionado de los filtros web
+        function getFilterText(inputName) {
+            const el = document.querySelector(`[name="${inputName}"]`);
+            if (!el) return '--------';
+            if (el.tagName === 'SELECT') {
+                return el.options[el.selectedIndex]?.text || '--------';
+            }
+            return el.value || '--------';
+        }
+
         if (printBtn && tableSection) {
             printBtn.addEventListener('click', function() {
-                const tableContent = tableSection.innerHTML; // Usamos innerHTML para meterlo en el body limpio
+                // Capturar valores de los filtros
+                const fRef = getFilterText('ref_departamento');
+                const fAnio = getFilterText('anio');
+                const fCondicion = getFilterText('condicion');
+                const fStatus = getFilterText('status_final_compra');
+                const fTipo = getFilterText('tipo_compra');
+                const fProv = getFilterText('proveedor');
+
+                const hoy = new Date();
+                const opcionesFecha = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                const fechaStr = hoy.toLocaleDateString('es-PA', opcionesFecha);
+                const anioActual = hoy.getFullYear();
+                
+                // Ruta del logo. Ajusta 'img/membrete-removebg-preview.png' a la ruta correcta de tu proyecto
+                const logoSrc = "{% static 'img/membrete-removebg-preview.png' %}";
 
                 const printWindowHtml = `
                     <!DOCTYPE html>
-                    <html>
+                    <html lang="es">
                     <head>
+                        <meta charset="UTF-8">
                         <title>Reporte de Seguimientos</title>
-                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
                         <style>
-                            body { margin: 20px; font-family: Arial, sans-serif; }
-                            h2 { text-align: center; margin-bottom: 20px; }
-                            .table { width: 100%; font-size: 10pt; }
-                            .table thead tr {
-                                -webkit-print-color-adjust: exact !important;
-                                print-color-adjust: exact !important;
-                                background-color: #343a40 !important;
-                                color: white !important;
+                            /* Configuración de página horizontal */
+                            @page { 
+                                size: landscape; 
+                                margin: 15mm 10mm; 
                             }
-                            .table th, .table td { border: 1px solid #dee2e6; padding: 0.5rem; }
-                            .no-print { display: none !important; }
-                            .text-end { text-align: right; }
+                            body { 
+                                font-family: 'Arial', sans-serif; 
+                                font-size: 11px;
+                                color: #000;
+                                margin: 0;
+                            }
+                            
+                            /* --- ENCABEZADO --- */
+                            .print-header {
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: flex-start;
+                                margin-bottom: 20px;
+                            }
+                            .header-logo {
+                                width: 300px;
+                            }
+                            .header-logo img {
+                                max-width: 100%;
+                                height: auto;
+                                max-height: 55px; /* Ajuste para el logo subido */
+                            }
+                            .header-center {
+                                text-align: center;
+                                font-weight: bold;
+                                font-size: 12px;
+                                flex-grow: 1;
+                            }
+                            .header-right {
+                                font-size: 12px;
+                                font-weight: bold;
+                                text-align: right;
+                                width: 50px;
+                            }
+
+                            /* --- CAJA DE FILTROS GRIS --- */
+                            .filter-container {
+                                display: flex;
+                                background-color: #e9ecef;
+                                border: 1px solid #000;
+                                padding: 10px;
+                                margin-bottom: 15px;
+                                -webkit-print-color-adjust: exact;
+                                print-color-adjust: exact;
+                                font-size: 10px;
+                            }
+                            .filter-col {
+                                flex: 1;
+                                padding: 0 10px;
+                            }
+                            .filter-item {
+                                margin-bottom: 8px;
+                            }
+                            .filter-item .label {
+                                display: block;
+                                color: #555;
+                                margin-bottom: 2px;
+                            }
+                            .filter-item .value {
+                                display: block;
+                                border-bottom: 1px dotted #000;
+                                min-height: 14px;
+                            }
+
+                            /* --- TABLA --- */
+                            table { 
+                                width: 100%; 
+                                border-collapse: collapse; 
+                                font-size: 10px;
+                                margin-bottom: 30px;
+                            }
+                            th, td { 
+                                border: 1px solid #000; 
+                                padding: 6px; 
+                            }
+                            
+                            /* Forzar fondo blanco y texto negro en encabezados */
+                            thead th, tfoot td {
+                                background-color: #fff !important;
+                                color: #000 !important;
+                                font-weight: bold;
+                            }
+
+                            /* Encabezados Verticales (1, 2, 3, 5, 6, 7) */
+                            thead th:nth-child(1),
+                            thead th:nth-child(2),
+                            thead th:nth-child(3),
+                            thead th:nth-child(5),
+                            thead th:nth-child(6),
+                            thead th:nth-child(7) {
+                                writing-mode: vertical-rl;
+                                transform: rotate(180deg);
+                                height: 160px; /* Altura para el texto vertical */
+                                white-space: nowrap;
+                                text-align: left; /* Al estar rotado, 'left' lo pega a la línea de abajo */
+                                vertical-align: middle;
+                                padding: 10px 5px;
+                                background-color: #e9ecef !important; /* Ligeramente gris como en la foto */
+                            }
+                            
+                            /* Columna Descripción (Horizontal) */
+                            thead th:nth-child(4) {
+                                vertical-align: bottom;
+                                text-align: center;
+                                background-color: #e9ecef !important;
+                            }
+
+                            /* Alineaciones de celdas */
+                            td:nth-child(1), td:nth-child(2), td:nth-child(3), 
+                            td:nth-child(5), td:nth-child(6) { text-align: center; vertical-align: middle; }
+                            td:nth-child(4) { text-align: left; vertical-align: middle; }
+                            td:nth-child(7) { text-align: right; vertical-align: middle; }
+
+                            tfoot td {
+                                text-align: right;
+                                padding-right: 10px;
+                            }
+
+                            /* --- PIE DE PÁGINA --- */
+                            .print-footer {
+                                display: flex;
+                                justify-content: space-between;
+                                font-size: 10px;
+                                margin-top: 40px;
+                            }
+                            .footer-note {
+                                margin-top: 20px;
+                                font-size: 9px;
+                            }
                         </style>
                     </head>
                     <body>
-                        <h2>Reporte de Seguimientos</h2>
-                        <div class="table-responsive">
-                            <table class="table table-striped table-sm">
-                                ${tableSection.querySelector('table').innerHTML}
-                            </table>
+                        <div class="print-header">
+                            <div class="header-logo">
+                                <img src="${logoSrc}" alt="Logo IGORGAS">
+                            </div>
+                            <div class="header-center">
+                                REPORTE DE SEGUIMIENTO DE LAS<br>
+                                SOLICITUDES DE BIENES Y SERVICIOS DEL<br>
+                                LABORATORIO DE REFERENCIA DE ALIMENTOS Y AGUAS
+                            </div>
+                            <div class="header-right">1</div>
                         </div>
+
+                        <div class="filter-container">
+                            <div class="filter-col">
+                                <div class="filter-item">
+                                    <span class="label">Código / Ref. (que se pueda buscar por # de SBS, OC y Ref.)</span>
+                                    <span class="value">${fRef}</span>
+                                </div>
+                                <div class="filter-item">
+                                    <span class="label">Año:</span>
+                                    <span class="value">${fAnio}</span>
+                                </div>
+                            </div>
+                            <div class="filter-col">
+                                <div class="filter-item">
+                                    <span class="label">Condición:</span>
+                                    <span class="value">${fCondicion}</span>
+                                </div>
+                                <div class="filter-item">
+                                    <span class="label">Status:</span>
+                                    <span class="value">${fStatus}</span>
+                                </div>
+                            </div>
+                            <div class="filter-col">
+                                <div class="filter-item">
+                                    <span class="label">Tipo de Compra:</span>
+                                    <span class="value">${fTipo}</span>
+                                </div>
+                            </div>
+                            <div class="filter-col border-start pl-3" style="border-left: 1px solid #ccc; padding-left: 10px;">
+                                <div class="filter-item">
+                                    <span class="label">Proveedor:</span>
+                                    <span class="value">${fProv}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${tableSection.innerHTML}
+
+                        <div class="print-footer">
+                            <div>Impreso por: {{ request.user.get_full_name|default:request.user.username|default:"(nombre de usuario)" }}</div>
+                            <div>Fecha: ${fechaStr}</div>
+                            <div>PÁGINA 1 DE 1 DE ${anioActual}</div>
+                        </div>
+                        
+                        <div class="footer-note">Para imprimir incluir encabezado y pie de página.</div>
+
                         <script>
                             window.onload = function() {
-                                window.print();
-                                window.close();
+                                // Pequeño retraso para que el logo termine de cargar antes de imprimir
+                                setTimeout(function() {
+                                    window.print();
+                                    window.close();
+                                }, 500);
                             }
                         <\/script>
                     </body>
