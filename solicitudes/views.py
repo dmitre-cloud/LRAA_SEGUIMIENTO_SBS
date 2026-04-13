@@ -145,18 +145,24 @@ class SeguimientoUpdateView(LoginRequiredMixin, UpdateView):
         return reverse_lazy('solicitud-detail', kwargs={'pk': self.object.solicitud.pk})
 
 
-# --- NUEVA VISTA DE REPORTES Y FILTROS ---
-
 class SeguimientoReportView(LoginRequiredMixin, ListView):
     model = SeguimientoCompra
     template_name = 'solicitudes/seguimiento_report.html'
     context_object_name = 'seguimientos'
     paginate_by = 10
 
+    def get_paginate_by(self, queryset):
+        """
+        Si detecta el parámetro 'print' en la URL, desactiva la paginación
+        devolviendo None. De lo contrario, usa el valor por defecto (10).
+        """
+        if self.request.GET.get('print'):
+            return None
+        return self.paginate_by
+
     def get_queryset(self):
         """
         Este método aplica los permisos de departamento y los filtros de búsqueda.
-        (Este método se mantiene sin cambios)
         """
         user = self.request.user
         queryset = SeguimientoCompra.objects.select_related('solicitud').all()
@@ -176,10 +182,12 @@ class SeguimientoReportView(LoginRequiredMixin, ListView):
                 queryset = queryset.filter(solicitud__tipo_compra=cleaned_data['tipo_compra'])
             if cleaned_data.get('proveedor'):
                 queryset = queryset.filter(proveedor__icontains=cleaned_data['proveedor'])
-            # 🌟 LOGICA DE FILTRO POR AÑO
+            
+            # Lógica de filtro por año
             if cleaned_data.get('anio'):
                 queryset = queryset.filter(solicitud__fecha_creacion__year=cleaned_data['anio'])
-            # 👇 NUEVA LÓGICA DE FILTRO POR REFERENCIA
+            
+            # Filtro por referencia
             if cleaned_data.get('ref_departamento'):
                 queryset = queryset.filter(solicitud__ref_departamento__icontains=cleaned_data['ref_departamento'])
         
@@ -192,10 +200,12 @@ class SeguimientoReportView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['filter_form'] = self.filter_form
         
-        # --- 👇 LÍNEAS NUEVAS PARA CALCULAR EL TOTAL 👇 ---
-        # Usamos el queryset ya filtrado (self.object_list) para el cálculo
-        total_monto_oc = self.object_list.aggregate(total=Sum('monto_oc'))['total'] or 0.00
+        # --- 👇 AJUSTE PARA EL TOTAL 👇 ---
+        # Calculamos el total sobre el queryset completo filtrado (get_queryset),
+        # no sobre self.object_list, para que el total sea global aunque haya paginación.
+        filtered_queryset = self.get_queryset()
+        total_monto_oc = filtered_queryset.aggregate(total=Sum('monto_oc'))['total'] or 0.00
         context['total_monto_oc'] = total_monto_oc
-        # --- 👆 FIN DE LAS LÍNEAS NUEVAS ---
+        # --- 👆 FIN DEL AJUSTE ---
 
         return context

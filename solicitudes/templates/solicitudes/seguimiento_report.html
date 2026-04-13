@@ -1,5 +1,4 @@
 {% extends "solicitudes/base.html" %}
-
 {% load humanize %}
 {% load static %}
 
@@ -7,6 +6,7 @@
 
 {% block content %}
 <style>
+    /* Estilos para ocultar la tabla real en la web al imprimir y usar solo nuestra ventana emergente */
     @media print {
         body * { visibility: hidden; }
         #report-table-section, #report-table-section * { visibility: visible; }
@@ -20,7 +20,7 @@
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
             <h4 class="mb-0">📊 Reporte de Seguimientos</h4>
             <div>
-                <button id="print-table-btn" class="btn btn-sm btn-success">🖨️ Imprimir Tabla</button>
+                <button id="print-table-btn" class="btn btn-sm btn-success">🖨️ Imprimir Todo el Reporte</button>
                 <a href="{% url 'seguimiento-report' %}" class="btn btn-sm btn-outline-secondary">Limpiar Filtros</a>
             </div>
         </div>
@@ -60,10 +60,10 @@
                             <td><strong>{{ seguimiento.sbs_numero|default:"--" }}</strong></td>
                             <td>{{ seguimiento.oc_numero|default:"--" }}</td>
                             <td title="{{ seguimiento.solicitud.descripcion_pedido }}">
-                                {{ seguimiento.solicitud.descripcion_pedido|truncatechars:35|default:"--" }}
+                                {{ seguimiento.solicitud.descripcion_pedido|truncatechars:45|default:"--" }}
                             </td>
                             <td>{{ seguimiento.get_tipo_entrega_display|default:"--" }}</td>
-                            <td>{{ seguimiento.proveedor|truncatechars:20|default:"--" }}</td>
+                            <td>{{ seguimiento.proveedor|truncatechars:25|default:"--" }}</td>
                             <td class="text-end">{{ seguimiento.monto_oc|floatformat:2|default:"0.00"|intcomma }}</td>
                         </tr>
                         {% empty %}
@@ -75,7 +75,7 @@
                     {% if seguimientos %}
                     <tfoot class="table-dark">
                         <tr>
-                            <td colspan="6" class="text-end px-3"><strong>TOTAL MONTO OC:</strong></td>
+                            <td colspan="6" class="text-end px-3"><strong>MONTO TOTAL:</strong></td>
                             <td class="text-end"><strong>B/. {{ total_monto_oc|floatformat:2|intcomma }}</strong></td>
                         </tr>
                     </tfoot>
@@ -109,91 +109,94 @@
         const printBtn = document.getElementById('print-table-btn');
         const tableSection = document.getElementById('report-table-section');
 
-        if (printBtn && tableSection) {
+        // Lógica para detectar si ya estamos en la página de "Solo Impresión"
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('print')) {
+            generarImpresionDirecta();
+        }
+
+        if (printBtn) {
             printBtn.addEventListener('click', function() {
-                const hoy = new Date();
-                const fechaStr = hoy.toLocaleDateString('es-PA', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                const anioActual = hoy.getFullYear();
-                const logoSrc = "{% static 'img/membrete-removebg-preview.png' %}";
-
-                const printWindowHtml = `
-                    <!DOCTYPE html>
-                    <html lang="es">
-                    <head>
-                        <meta charset="UTF-8">
-                        <style>
-                            @page { size: landscape; margin: 15mm 10mm; }
-                            body { font-family: 'Arial', sans-serif; font-size: 11px; color: #000; margin: 0; }
-                            
-                            .print-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
-                            .header-logo { width: 300px; }
-                            .header-logo img { max-width: 100%; max-height: 55px; }
-                            .header-center { text-align: center; font-weight: bold; font-size: 12px; flex-grow: 1; }
-                            .header-right { font-size: 12px; font-weight: bold; width: 50px; text-align: right; }
-
-                            table { width: 100%; border-collapse: collapse; font-size: 10px; }
-                            th, td { border: 1px solid #000; padding: 6px; }
-                            
-                            thead th, tfoot td { background-color: #fff !important; color: #000 !important; font-weight: bold; }
-
-                            /* Estilo vertical de encabezados */
-                            thead th:not(:nth-child(4)) {
-                                writing-mode: vertical-rl;
-                                transform: rotate(180deg);
-                                height: 160px;
-                                white-space: nowrap;
-                                text-align: left;
-                                vertical-align: middle;
-                                padding: 10px 5px;
-                                background-color: #e9ecef !important;
-                            }
-                            
-                            thead th:nth-child(4) { vertical-align: bottom; text-align: center; background-color: #e9ecef !important; }
-
-                            td:not(:nth-child(4)):not(:nth-child(7)) { text-align: center; }
-                            td:nth-child(4) { text-align: left; }
-                            td:nth-child(7) { text-align: right; }
-
-                            .print-footer { display: flex; justify-content: space-between; font-size: 10px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="print-header">
-                            <div class="header-logo"><img src="${logoSrc}"></div>
-                            <div class="header-center">
-                                REPORTE DE SEGUIMIENTO DE LAS<br>
-                                SOLICITUDES DE BIENES Y SERVICIOS DEL<br>
-                                LABORATORIO DE REFERENCIA DE ALIMENTOS Y AGUAS
-                            </div>
-                            <div class="header-right">1</div>
-                        </div>
-
-                        ${tableSection.innerHTML}
-
-                        <div class="print-footer">
-                            <div>Impreso por: {{ request.user.get_full_name|default:request.user.username }}</div>
-                            <div>Fecha: ${fechaStr}</div>
-                            <div>PÁGINA 1 DE 1 DE ${anioActual}</div>
-                        </div>
-
-                        <script>
-                            window.onload = function() {
-                                setTimeout(function() {
-                                    window.print();
-                                    window.close();
-                                }, 500);
-                            }
-                        <\/script>
-                    </body>
-                    </html>
-                `;
-
-                const printWindow = window.open('', '_blank');
-                if (printWindow) {
-                    printWindow.document.write(printWindowHtml);
-                    printWindow.document.close();
-                }
+                // Obtenemos la URL actual con todos los filtros aplicados
+                const currentUrl = new URL(window.location.href);
+                // Añadimos el parámetro para desactivar paginación
+                currentUrl.searchParams.set('print', '1');
+                
+                // Abrimos esa URL en una nueva pestaña
+                window.open(currentUrl.toString(), '_blank');
             });
+        }
+
+        function generarImpresionDirecta() {
+            const hoy = new Date();
+            const fechaStr = hoy.toLocaleDateString('es-PA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const anioActual = hoy.getFullYear();
+            const logoSrc = "{% static 'img/membrete-removebg-preview.png' %}";
+
+            const printWindowHtml = `
+                <!DOCTYPE html>
+                <html lang="es">
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        @page { size: landscape; margin: 15mm 10mm; }
+                        body { font-family: 'Arial', sans-serif; font-size: 11px; color: #000; margin: 0; }
+                        .print-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+                        .header-logo { width: 300px; }
+                        .header-logo img { max-width: 100%; max-height: 55px; }
+                        .header-center { text-align: center; font-weight: bold; font-size: 12px; flex-grow: 1; }
+                        .header-right { font-size: 12px; font-weight: bold; width: 50px; text-align: right; }
+                        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+                        th, td { border: 1px solid #000; padding: 6px; }
+                        thead th, tfoot td { background-color: #fff !important; color: #000 !important; font-weight: bold; }
+                        thead th:not(:nth-child(4)) {
+                            writing-mode: vertical-rl;
+                            transform: rotate(180deg);
+                            height: 160px;
+                            white-space: nowrap;
+                            text-align: left;
+                            vertical-align: middle;
+                            padding: 10px 5px;
+                            background-color: #e9ecef !important;
+                        }
+                        thead th:nth-child(4) { vertical-align: bottom; text-align: center; background-color: #e9ecef !important; }
+                        td:not(:nth-child(4)):not(:nth-child(7)) { text-align: center; }
+                        td:nth-child(4) { text-align: left; }
+                        td:nth-child(7) { text-align: right; }
+                        .print-footer { display: flex; justify-content: space-between; font-size: 10px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-header">
+                        <div class="header-logo"><img src="${logoSrc}"></div>
+                        <div class="header-center">
+                            REPORTE DE SEGUIMIENTO DE LAS<br>
+                            SOLICITUDES DE BIENES Y SERVICIOS DEL<br>
+                            LABORORATORIO DE REFERENCIA DE ALIMENTOS Y AGUAS
+                        </div>
+                        <div class="header-right">1</div>
+                    </div>
+                    ${tableSection.innerHTML}
+                    <div class="print-footer">
+                        <div>Impreso por: {{ request.user.get_full_name|default:request.user.username }}</div>
+                        <div>Fecha: ${fechaStr}</div>
+                        <div>PÁGINA 1 DE 1 DE ${anioActual}</div>
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                                window.close();
+                            }, 500);
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `;
+            // Escribimos el contenido en el documento actual (que es el de la nueva pestaña)
+            document.open();
+            document.write(printWindowHtml);
+            document.close();
         }
     });
 </script>
