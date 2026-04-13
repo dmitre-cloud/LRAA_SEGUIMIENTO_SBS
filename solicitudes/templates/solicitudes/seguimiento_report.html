@@ -1,11 +1,12 @@
 {% extends "solicitudes/base.html" %}
 
 {% load humanize %}
-{% load static %} {% block title %}Reporte de Seguimientos{% endblock %}
+{% load static %}
+
+{% block title %}Reporte de Seguimientos{% endblock %}
 
 {% block content %}
 <style>
-    /* Ocultar elementos en la impresión nativa (Ctrl+P) por si el usuario no usa el botón */
     @media print {
         body * { visibility: hidden; }
         #report-table-section, #report-table-section * { visibility: visible; }
@@ -27,30 +28,12 @@
             
             <form method="get" action="" class="mb-4 p-3 border rounded bg-light" id="filter-form">
                 <div class="row g-2 align-items-end">
-                    <div class="col-md-2">
-                        {{ filter_form.ref_departamento.label_tag }}
-                        {{ filter_form.ref_departamento }}
-                    </div>
-                    <div class="col-md-2">
-                        {{ filter_form.anio.label_tag }}
-                        {{ filter_form.anio }}
-                    </div>
-                    <div class="col-md-2">
-                        {{ filter_form.condicion.label_tag }}
-                        {{ filter_form.condicion }}
-                    </div>
-                    <div class="col-md-2">
-                        {{ filter_form.status_final_compra.label_tag }}
-                        {{ filter_form.status_final_compra }}
-                    </div>
-                    <div class="col-md-2">
-                        {{ filter_form.tipo_compra.label_tag }}
-                        {{ filter_form.tipo_compra }}
-                    </div>
-                    <div class="col-md-2">
-                        {{ filter_form.proveedor.label_tag }}
-                        {{ filter_form.proveedor }}
-                    </div>
+                    <div class="col-md-2">{{ filter_form.ref_departamento.label_tag }}{{ filter_form.ref_departamento }}</div>
+                    <div class="col-md-2">{{ filter_form.anio.label_tag }}{{ filter_form.anio }}</div>
+                    <div class="col-md-2">{{ filter_form.condicion.label_tag }}{{ filter_form.condicion }}</div>
+                    <div class="col-md-2">{{ filter_form.status_final_compra.label_tag }}{{ filter_form.status_final_compra }}</div>
+                    <div class="col-md-2">{{ filter_form.tipo_compra.label_tag }}{{ filter_form.tipo_compra }}</div>
+                    <div class="col-md-2">{{ filter_form.proveedor.label_tag }}{{ filter_form.proveedor }}</div>
                     <div class="col-md-12 mt-3 d-grid"> 
                         <button type="submit" class="btn btn-primary">🔎 Filtrar Resultados</button>
                     </div>
@@ -73,33 +56,19 @@
                     <tbody>
                         {% for seguimiento in seguimientos %}
                         <tr>
-                            <td class="fw-bold text-primary">
-                                {{ seguimiento.solicitud.ref_departamento|default:seguimiento.solicitud.id }}
-                            </td>
-                            <td>
-                                <strong>{{ seguimiento.sbs_numero|default:"--" }}</strong>
-                            </td>
-                            <td>
-                                {{ seguimiento.oc_numero|default:"--" }}
-                            </td>
+                            <td class="fw-bold text-primary">{{ seguimiento.solicitud.ref_departamento|default:seguimiento.solicitud.id }}</td>
+                            <td><strong>{{ seguimiento.sbs_numero|default:"--" }}</strong></td>
+                            <td>{{ seguimiento.oc_numero|default:"--" }}</td>
                             <td title="{{ seguimiento.solicitud.descripcion_pedido }}">
                                 {{ seguimiento.solicitud.descripcion_pedido|truncatechars:35|default:"--" }}
                             </td>
-                            <td>
-                                {{ seguimiento.get_tipo_entrega_display|default:"--" }}
-                            </td>
-                            <td>
-                                {{ seguimiento.proveedor|truncatechars:20|default:"--" }}
-                            </td>
-                            <td class="text-end">
-                                {{ seguimiento.monto_oc|floatformat:2|default:"0.00"|intcomma }}
-                            </td>
+                            <td>{{ seguimiento.get_tipo_entrega_display|default:"--" }}</td>
+                            <td>{{ seguimiento.proveedor|truncatechars:20|default:"--" }}</td>
+                            <td class="text-end">{{ seguimiento.monto_oc|floatformat:2|default:"0.00"|intcomma }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">
-                                No se encontraron seguimientos que coincidan con los filtros.
-                            </td>
+                            <td colspan="7" class="text-center py-4 text-muted">No se encontraron resultados.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -115,26 +84,18 @@
             </div>
 
             {% if is_paginated %}
-            <nav aria-label="Page navigation" class="no-print mt-3">
+            <nav class="no-print mt-3">
                 <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
                     <li class="page-item">
                         <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' and value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Anterior</a>
                     </li>
-                    {% else %}
-                    <li class="page-item disabled"><span class="page-link">Anterior</span></li>
                     {% endif %}
-                    
-                    <li class="page-item active" aria-current="page">
-                        <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-                    </li>
-
+                    <li class="page-item active"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
                     {% if page_obj.has_next %}
                     <li class="page-item">
                         <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' and value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Siguiente</a>
                     </li>
-                    {% else %}
-                    <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -148,32 +109,11 @@
         const printBtn = document.getElementById('print-table-btn');
         const tableSection = document.getElementById('report-table-section');
 
-        // Función auxiliar para obtener el texto seleccionado de los filtros web
-        function getFilterText(inputName) {
-            const el = document.querySelector(`[name="${inputName}"]`);
-            if (!el) return '--------';
-            if (el.tagName === 'SELECT') {
-                return el.options[el.selectedIndex]?.text || '--------';
-            }
-            return el.value || '--------';
-        }
-
         if (printBtn && tableSection) {
             printBtn.addEventListener('click', function() {
-                // Capturar valores de los filtros
-                const fRef = getFilterText('ref_departamento');
-                const fAnio = getFilterText('anio');
-                const fCondicion = getFilterText('condicion');
-                const fStatus = getFilterText('status_final_compra');
-                const fTipo = getFilterText('tipo_compra');
-                const fProv = getFilterText('proveedor');
-
                 const hoy = new Date();
-                const opcionesFecha = { day: '2-digit', month: '2-digit', year: 'numeric' };
-                const fechaStr = hoy.toLocaleDateString('es-PA', opcionesFecha);
+                const fechaStr = hoy.toLocaleDateString('es-PA', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 const anioActual = hoy.getFullYear();
-                
-                // Ruta del logo. Ajusta 'img/membrete-removebg-preview.png' a la ruta correcta de tu proyecto
                 const logoSrc = "{% static 'img/membrete-removebg-preview.png' %}";
 
                 const printWindowHtml = `
@@ -181,149 +121,45 @@
                     <html lang="es">
                     <head>
                         <meta charset="UTF-8">
-                        <title>Reporte de Seguimientos</title>
                         <style>
-                            /* Configuración de página horizontal */
-                            @page { 
-                                size: landscape; 
-                                margin: 15mm 10mm; 
-                            }
-                            body { 
-                                font-family: 'Arial', sans-serif; 
-                                font-size: 11px;
-                                color: #000;
-                                margin: 0;
-                            }
+                            @page { size: landscape; margin: 15mm 10mm; }
+                            body { font-family: 'Arial', sans-serif; font-size: 11px; color: #000; margin: 0; }
                             
-                            /* --- ENCABEZADO --- */
-                            .print-header {
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: flex-start;
-                                margin-bottom: 20px;
-                            }
-                            .header-logo {
-                                width: 300px;
-                            }
-                            .header-logo img {
-                                max-width: 100%;
-                                height: auto;
-                                max-height: 55px; /* Ajuste para el logo subido */
-                            }
-                            .header-center {
-                                text-align: center;
-                                font-weight: bold;
-                                font-size: 12px;
-                                flex-grow: 1;
-                            }
-                            .header-right {
-                                font-size: 12px;
-                                font-weight: bold;
-                                text-align: right;
-                                width: 50px;
-                            }
+                            .print-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+                            .header-logo { width: 300px; }
+                            .header-logo img { max-width: 100%; max-height: 55px; }
+                            .header-center { text-align: center; font-weight: bold; font-size: 12px; flex-grow: 1; }
+                            .header-right { font-size: 12px; font-weight: bold; width: 50px; text-align: right; }
 
-                            /* --- CAJA DE FILTROS GRIS --- */
-                            .filter-container {
-                                display: flex;
-                                background-color: #e9ecef;
-                                border: 1px solid #000;
-                                padding: 10px;
-                                margin-bottom: 15px;
-                                -webkit-print-color-adjust: exact;
-                                print-color-adjust: exact;
-                                font-size: 10px;
-                            }
-                            .filter-col {
-                                flex: 1;
-                                padding: 0 10px;
-                            }
-                            .filter-item {
-                                margin-bottom: 8px;
-                            }
-                            .filter-item .label {
-                                display: block;
-                                color: #555;
-                                margin-bottom: 2px;
-                            }
-                            .filter-item .value {
-                                display: block;
-                                border-bottom: 1px dotted #000;
-                                min-height: 14px;
-                            }
-
-                            /* --- TABLA --- */
-                            table { 
-                                width: 100%; 
-                                border-collapse: collapse; 
-                                font-size: 10px;
-                                margin-bottom: 30px;
-                            }
-                            th, td { 
-                                border: 1px solid #000; 
-                                padding: 6px; 
-                            }
+                            table { width: 100%; border-collapse: collapse; font-size: 10px; }
+                            th, td { border: 1px solid #000; padding: 6px; }
                             
-                            /* Forzar fondo blanco y texto negro en encabezados */
-                            thead th, tfoot td {
-                                background-color: #fff !important;
-                                color: #000 !important;
-                                font-weight: bold;
-                            }
+                            thead th, tfoot td { background-color: #fff !important; color: #000 !important; font-weight: bold; }
 
-                            /* Encabezados Verticales (1, 2, 3, 5, 6, 7) */
-                            thead th:nth-child(1),
-                            thead th:nth-child(2),
-                            thead th:nth-child(3),
-                            thead th:nth-child(5),
-                            thead th:nth-child(6),
-                            thead th:nth-child(7) {
+                            /* Estilo vertical de encabezados */
+                            thead th:not(:nth-child(4)) {
                                 writing-mode: vertical-rl;
                                 transform: rotate(180deg);
-                                height: 160px; /* Altura para el texto vertical */
+                                height: 160px;
                                 white-space: nowrap;
-                                text-align: left; /* Al estar rotado, 'left' lo pega a la línea de abajo */
+                                text-align: left;
                                 vertical-align: middle;
                                 padding: 10px 5px;
-                                background-color: #e9ecef !important; /* Ligeramente gris como en la foto */
-                            }
-                            
-                            /* Columna Descripción (Horizontal) */
-                            thead th:nth-child(4) {
-                                vertical-align: bottom;
-                                text-align: center;
                                 background-color: #e9ecef !important;
                             }
+                            
+                            thead th:nth-child(4) { vertical-align: bottom; text-align: center; background-color: #e9ecef !important; }
 
-                            /* Alineaciones de celdas */
-                            td:nth-child(1), td:nth-child(2), td:nth-child(3), 
-                            td:nth-child(5), td:nth-child(6) { text-align: center; vertical-align: middle; }
-                            td:nth-child(4) { text-align: left; vertical-align: middle; }
-                            td:nth-child(7) { text-align: right; vertical-align: middle; }
+                            td:not(:nth-child(4)):not(:nth-child(7)) { text-align: center; }
+                            td:nth-child(4) { text-align: left; }
+                            td:nth-child(7) { text-align: right; }
 
-                            tfoot td {
-                                text-align: right;
-                                padding-right: 10px;
-                            }
-
-                            /* --- PIE DE PÁGINA --- */
-                            .print-footer {
-                                display: flex;
-                                justify-content: space-between;
-                                font-size: 10px;
-                                margin-top: 40px;
-                            }
-                            .footer-note {
-                                margin-top: 20px;
-                                font-size: 9px;
-                            }
+                            .print-footer { display: flex; justify-content: space-between; font-size: 10px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; }
                         </style>
                     </head>
                     <body>
                         <div class="print-header">
-                            <div class="header-logo">
-                                <img src="${logoSrc}" alt="Logo IGORGAS">
-                            </div>
+                            <div class="header-logo"><img src="${logoSrc}"></div>
                             <div class="header-center">
                                 REPORTE DE SEGUIMIENTO DE LAS<br>
                                 SOLICITUDES DE BIENES Y SERVICIOS DEL<br>
@@ -332,54 +168,16 @@
                             <div class="header-right">1</div>
                         </div>
 
-                        <div class="filter-container">
-                            <div class="filter-col">
-                                <div class="filter-item">
-                                    <span class="label">Código / Ref. (que se pueda buscar por # de SBS, OC y Ref.)</span>
-                                    <span class="value">${fRef}</span>
-                                </div>
-                                <div class="filter-item">
-                                    <span class="label">Año:</span>
-                                    <span class="value">${fAnio}</span>
-                                </div>
-                            </div>
-                            <div class="filter-col">
-                                <div class="filter-item">
-                                    <span class="label">Condición:</span>
-                                    <span class="value">${fCondicion}</span>
-                                </div>
-                                <div class="filter-item">
-                                    <span class="label">Status:</span>
-                                    <span class="value">${fStatus}</span>
-                                </div>
-                            </div>
-                            <div class="filter-col">
-                                <div class="filter-item">
-                                    <span class="label">Tipo de Compra:</span>
-                                    <span class="value">${fTipo}</span>
-                                </div>
-                            </div>
-                            <div class="filter-col border-start pl-3" style="border-left: 1px solid #ccc; padding-left: 10px;">
-                                <div class="filter-item">
-                                    <span class="label">Proveedor:</span>
-                                    <span class="value">${fProv}</span>
-                                </div>
-                            </div>
-                        </div>
-
                         ${tableSection.innerHTML}
 
                         <div class="print-footer">
-                            <div>Impreso por: {{ request.user.get_full_name|default:request.user.username|default:"(nombre de usuario)" }}</div>
+                            <div>Impreso por: {{ request.user.get_full_name|default:request.user.username }}</div>
                             <div>Fecha: ${fechaStr}</div>
                             <div>PÁGINA 1 DE 1 DE ${anioActual}</div>
                         </div>
-                        
-                        <div class="footer-note">Para imprimir incluir encabezado y pie de página.</div>
 
                         <script>
                             window.onload = function() {
-                                // Pequeño retraso para que el logo termine de cargar antes de imprimir
                                 setTimeout(function() {
                                     window.print();
                                     window.close();
@@ -394,8 +192,6 @@
                 if (printWindow) {
                     printWindow.document.write(printWindowHtml);
                     printWindow.document.close();
-                } else {
-                    alert('Por favor, permite las ventanas emergentes para imprimir.');
                 }
             });
         }
