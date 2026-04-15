@@ -116,6 +116,17 @@ class SeguimientoFilterForm(forms.Form):
     STATUS_CHOICES = [('', '---------')] + SeguimientoCompra.STATUS_FINAL_CHOICES
     TIPO_COMPRA_CHOICES = [('', '---------')] + Solicitud.TIPO_COMPRA_CHOICES
     
+    sbs_numero = forms.CharField(
+        required=False,
+        label="N° SBS",
+        widget=forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Ej: 001-2026'})
+    )
+    oc_numero = forms.CharField(
+        required=False,
+        label="N° OC",
+        widget=forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Ej: 4200...'})
+    )
+    
     condicion = forms.ChoiceField(
         choices=CONDICION_CHOICES,
         required=False,

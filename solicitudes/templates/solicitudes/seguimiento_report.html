@@ -29,12 +29,16 @@
             <form method="get" action="" class="mb-4 p-3 border rounded bg-light" id="filter-form">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-2">{{ filter_form.ref_departamento.label_tag }}{{ filter_form.ref_departamento }}</div>
-                    <div class="col-md-2">{{ filter_form.anio.label_tag }}{{ filter_form.anio }}</div>
+                    <div class="col-md-2">{{ filter_form.sbs_numero.label_tag }}{{ filter_form.sbs_numero }}</div>
+                    <div class="col-md-2">{{ filter_form.oc_numero.label_tag }}{{ filter_form.oc_numero }}</div>
+                    <div class="col-md-1">{{ filter_form.anio.label_tag }}{{ filter_form.anio }}</div>
                     <div class="col-md-2">{{ filter_form.condicion.label_tag }}{{ filter_form.condicion }}</div>
-                    <div class="col-md-2">{{ filter_form.status_final_compra.label_tag }}{{ filter_form.status_final_compra }}</div>
-                    <div class="col-md-2">{{ filter_form.tipo_compra.label_tag }}{{ filter_form.tipo_compra }}</div>
-                    <div class="col-md-2">{{ filter_form.proveedor.label_tag }}{{ filter_form.proveedor }}</div>
-                    <div class="col-md-12 mt-3 d-grid"> 
+                    <div class="col-md-3">{{ filter_form.status_final_compra.label_tag }}{{ filter_form.status_final_compra }}</div>
+                    
+                    <div class="col-md-3 mt-2">{{ filter_form.tipo_compra.label_tag }}{{ filter_form.tipo_compra }}</div>
+                    <div class="col-md-6 mt-2">{{ filter_form.proveedor.label_tag }}{{ filter_form.proveedor }}</div>
+                    
+                    <div class="col-md-3 mt-2 d-grid"> 
                         <button type="submit" class="btn btn-primary">🔎 Filtrar Resultados</button>
                     </div>
                 </div>
