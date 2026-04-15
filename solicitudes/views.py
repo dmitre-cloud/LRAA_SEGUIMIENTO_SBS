@@ -176,10 +176,10 @@ class SeguimientoReportView(LoginRequiredMixin, ListView):
             cleaned_data = self.filter_form.cleaned_data
 
             if cleaned_data.get('sbs_numero'):
-            queryset = queryset.filter(sbs_numero__icontains=cleaned_data['sbs_numero'])
+                queryset = queryset.filter(sbs_numero__icontains=cleaned_data['sbs_numero'])
         
             if cleaned_data.get('oc_numero'):
-            queryset = queryset.filter(oc_numero__icontains=cleaned_data['oc_numero'])
+                queryset = queryset.filter(oc_numero__icontains=cleaned_data['oc_numero'])
 
             if cleaned_data.get('condicion'):
                 queryset = queryset.filter(condicion=cleaned_data['condicion'])
