@@ -133,11 +133,11 @@ class SeguimientoUpdateView(LoginRequiredMixin, UpdateView):
     form_class = SeguimientoCompraForm
     template_name = 'solicitudes/solicitud_detail.html' 
 
-    # 🌟 NUEVO: Este método asegura que el usuario que está haciendo la petición 
-    # se envíe al formulario cuando se procesa el botón de "Guardar".
+    # 🌟 ESTO ES LO QUE FALTA Y CAUSA EL ERROR:
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user # <--- Esto permite que 'can_edit' funcione
+        # Aquí le pasamos el usuario actual al formulario
+        kwargs['user'] = self.request.user 
         return kwargs
 
     def get_object(self, queryset=None):

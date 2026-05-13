@@ -33,7 +33,7 @@ class SeguimientoCompraForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
+        user = kwargs.pop('user', None) # El ', None' evita el KeyError si no existe
         super().__init__(*args, **kwargs)
 
         # 🌟 NUEVO: Convertir el texto guardado ("valor1,valor2") a lista para que 
