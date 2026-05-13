@@ -176,7 +176,7 @@ class SeguimientoCompra(models.Model):
         
     # Campos del seguimiento
     numero_partida = models.CharField(max_length=100, blank=True, verbose_name="NÚMERO DE PARTIDA")
-    condicion = models.CharField(max_length=255, choices=CONDICION_CHOICES, blank=True, verbose_name="CONDICIÓN")
+    condicion = models.CharField(max_length=255, blank=True, verbose_name="CONDICIÓN")
     fecha_ingreso_v3 = models.DateField(null=True, blank=True, verbose_name="FECHA DE INGRESO AL V3")
     sbs_numero = models.CharField(max_length=50, blank=True, verbose_name="NÚMERO DE SBS")
     
