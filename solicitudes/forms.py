@@ -28,83 +28,62 @@ class SeguimientoCompraForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
-        # --- Lógica de Permisos ---
         roles_permitidos = ['Asistente Administrativo', 'Director Encargado']
         can_edit = user and user.job_position in roles_permitidos
         
-        # Iteramos sobre todos los campos para aplicar clases y permisos
         for field_name, field in self.fields.items():
-            
-            # --- 1. Aplicación de Clases Base de Bootstrap (MEJORADA) ---
             current_classes = field.widget.attrs.get('class', '')
             
+            # --- 1. Aplicación de Clases Base de Bootstrap ---
             if isinstance(field.widget, forms.CheckboxInput):
-                # Checkboxes usan form-check-input
                 if 'form-check-input' not in current_classes:
                     field.widget.attrs['class'] = (current_classes + ' form-check-input').strip()
             
+            # NUEVO: Evitamos aplicar form-control a los RadioSelect para que se vean bien en línea
+            elif isinstance(field.widget, forms.RadioSelect):
+                pass 
+                
             elif isinstance(field.widget, forms.Select):
-                # Selects usan form-select
                 if 'form-select' not in current_classes:
                     field.widget.attrs['class'] = (current_classes + ' form-select').strip()
-            
             else:
-                # El resto de campos usa form-control
                 if 'form-control' not in current_classes:
                     field.widget.attrs['class'] = (current_classes + ' form-control').strip()
 
-            # --- 2. Aplicación de Restricciones (si el usuario NO puede editar) ---
+            # --- 2. Aplicación de Restricciones ---
             if not can_edit:
-                if isinstance(field.widget, forms.CheckboxInput):
-                    # Checkboxes se deshabilitan
+                if isinstance(field.widget, (forms.CheckboxInput, forms.RadioSelect)):
                     field.widget.attrs['disabled'] = True
                 else:
-                    # Campos de texto/número/fecha se hacen de solo lectura
                     field.widget.attrs['readonly'] = True
-                    
-                    # Añadimos la clase visual de solo lectura de Bootstrap
                     current_classes = field.widget.attrs.get('class', '')
                     if 'bg-light' not in current_classes:
                         field.widget.attrs['class'] = (current_classes + ' bg-light').strip()
 
-
     class Meta:
         model = SeguimientoCompra
-        exclude = ('solicitud',)
+        exclude = ('solicitud', 'observacion_1', 'observacion_2', 'fecha_inicial_mant_calib_caract') # Excluimos los que no están en el diseño
         
-        # Los widgets se mantienen igual, solo aseguramos que 'vencimiento_oc'
-        # tenga 'readonly' POR DEFECTO para el cálculo en JS.
         widgets = {
-            'plazo_entrega': forms.NumberInput(
-                attrs={'id': 'id_plazo_entrega'}
-            ),
-            # --- CAMBIO CRÍTICO: Añadido widget para 'tipo_plazo' ---
-            'tipo_plazo': forms.Select(
-                attrs={'id': 'id_tipo_plazo_entrega'}
-            ),
-            'fecha_publicacion_oc': forms.DateInput(
-                attrs={'type': 'date', 'id': 'id_fecha_publicacion_oc'}, 
-                format='%Y-%m-%d'
-            ),
+            'condicion': forms.RadioSelect(), # <-- Agregado para que sea de selección múltiple horizontal
+            'plazo_entrega': forms.NumberInput(attrs={'id': 'id_plazo_entrega'}),
+            'tipo_plazo': forms.Select(attrs={'id': 'id_tipo_plazo_entrega'}),
+            'fecha_publicacion_oc': forms.DateInput(attrs={'type': 'date', 'id': 'id_fecha_publicacion_oc'}, format='%Y-%m-%d'),
             'vencimiento_oc': forms.DateInput(
-                attrs={
-                    'type': 'date',
-                    'id': 'id_vencimiento_oc',
-                    'readonly': True, # Se mantiene readonly para el cálculo de JS
-                }, 
+                attrs={'type': 'date', 'id': 'id_vencimiento_oc', 'readonly': True}, 
                 format='%Y-%m-%d'
             ),
             'fecha_ingreso_v3': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'fecha_pedido_evaluado': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'nuevo_plazo_entrega': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'fecha_recibo': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'fecha_inicial_mant_calib_caract': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'observacion_1': forms.Textarea(attrs={'rows': 2}),
-            'observacion_2': forms.Textarea(attrs={'rows': 2}),
+            
+            # Cuadros de observación (Textareas) según el diseño
+            'quien_recibe_almacen': forms.Textarea(attrs={'rows': 2}),
+            'numero_recibido_conforme': forms.Textarea(attrs={'rows': 2}),
             'solicitud_ajuste': forms.Textarea(attrs={'rows': 2}),
+            'observacion_ajuste': forms.Textarea(attrs={'rows': 2}),
         }
-
-
 
 
 # --- AGREGA ESTA NUEVA CLASE AL FINAL DEL ARCHIVO ---

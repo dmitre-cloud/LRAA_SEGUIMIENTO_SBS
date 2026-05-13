@@ -164,14 +164,22 @@ class SeguimientoCompra(models.Model):
     # Campos del seguimiento
     numero_partida = models.CharField(max_length=100, blank=True, verbose_name="NÚMERO DE PARTIDA")
     condicion = models.CharField(max_length=20, choices=CONDICION_CHOICES, blank=True, verbose_name="CONDICIÓN")
-    fecha_ingreso_v3 = models.DateField(null=True, blank=True, verbose_name="FECHA DE INGRESO V3",)
-    sbs_numero = models.CharField(max_length=50, blank=True, verbose_name="NÚMERO DE SBS", help_text="Número de la solicitud de bienes y servicios (###-2026)")
+    fecha_ingreso_v3 = models.DateField(null=True, blank=True, verbose_name="FECHA DE INGRESO AL V3")
+    sbs_numero = models.CharField(max_length=50, blank=True, verbose_name="NÚMERO DE SBS")
+    
+    # --- NUEVOS CAMPOS ---
+    enlace_evaluacion = models.URLField(max_length=500, blank=True, verbose_name="ENLACE DE EVALUACIÓN")
+    enlace_recibido_conforme = models.URLField(max_length=500, blank=True, verbose_name="ENLACE DE RECIBIDO CONFORME")
+    numero_recibido_conforme = models.TextField(blank=True, verbose_name="NÚMERO DE RECIBIDO CONFORME")
+    observacion_ajuste = models.TextField(blank=True, verbose_name="OBSERVACIÓN DEL AJUSTE")
+    # ---------------------
+    
     fecha_pedido_evaluado = models.DateField(null=True, blank=True, verbose_name="FECHA DE PEDIDO EVALUADO")
-    oc_numero = models.CharField(max_length=100, blank=True, verbose_name="NÚMERO DE LA ORDEN DE COMPRA", help_text="Número de la Orden de Compra (4200#######)")
+    oc_numero = models.CharField(max_length=100, blank=True, verbose_name="NÚMERO DE LA ORDEN DE COMPRA")
     fecha_publicacion_oc = models.DateField(null=True, blank=True, verbose_name="FECHA DE PUBLICACIÓN DE LA ORDEN DE COMPRA")
     monto_oc = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, verbose_name="MONTO DE LA ORDEN DE COMPRA")
     tipo_entrega = models.CharField(max_length=10, choices=TIPO_ENTREGA_CHOICES, blank=True, verbose_name="TIPO DE ENTREGA")
-    plazo_entrega = models.PositiveIntegerField(null=True, blank=True, verbose_name="PLAZO DE ENTREGA", help_text="Días para realizar la entrega")
+    plazo_entrega = models.PositiveIntegerField(null=True, blank=True, verbose_name="PLAZO DE ENTREGA")
     tipo_plazo = models.CharField(max_length=15, choices=TIPO_PLAZO_CHOICES, blank=True, verbose_name="TIPO DE PLAZO")
     vencimiento_oc = models.DateField(null=True, blank=True, verbose_name="VENCIMIENTO DE LA ORDEN DE COMPRA")
     proveedor = models.CharField(max_length=256, blank=True, verbose_name="PROVEEDOR")
@@ -179,8 +187,11 @@ class SeguimientoCompra(models.Model):
     numero_ajuste = models.CharField(max_length=50, blank=True, verbose_name="NÚMERO DE AJUSTE")
     nuevo_plazo_entrega = models.DateField(null=True, blank=True, verbose_name="NUEVO PLAZO DE ENTREGA")
     status_final_compra = models.CharField(max_length=100, choices=STATUS_FINAL_CHOICES, blank=True, verbose_name="ESTADO FINAL DE LA COMPRA")
-    fecha_recibo = models.DateField(null=True, blank=True, verbose_name="FECHA DE RECIBO")
-    quien_recibe_almacen = models.CharField(max_length=256, blank=True, verbose_name="QUIÉN RECIBE EN ALMACÉN / # DE RECIBO CONFORME", help_text="Nombre del que recibe el bien o # de Recibido Conforme")
+    fecha_recibo = models.DateField(null=True, blank=True, verbose_name="FECHA DE RECIBIDO EN ALMACÉN")
+    
+    # Modificado para que sea cuadro de observación según tu diseño
+    quien_recibe_almacen = models.TextField(blank=True, verbose_name="QUIÉN RECIBE EN ALMACÉN") 
+    
     observacion_1 = models.TextField(blank=True, verbose_name="OBSERVACIÓN 1")
     observacion_2 = models.TextField(blank=True, verbose_name="OBSERVACIÓN 2")
     
@@ -189,12 +200,11 @@ class SeguimientoCompra(models.Model):
     calibracion = models.BooleanField(default=False, verbose_name="CALIBRACIÓN")
     caracterizacion = models.BooleanField(default=False, verbose_name="CARACTERIZACIÓN")
     
-    # Fecha adicional
     fecha_inicial_mant_calib_caract = models.DateField(null=True, blank=True, verbose_name="FECHA INICIAL DEL SERVICIO")
     
     # Enlaces
     enlace_orden_compra = models.URLField(max_length=500, blank=True, verbose_name="ENLACE DE LA ORDEN DE COMPRA")
-    enlace_sbs = models.URLField(max_length=500, blank=True, verbose_name="ENLACE DE LA SBS")
+    enlace_sbs = models.URLField(max_length=500, blank=True, verbose_name="ENLACE DE LA SBS INGRESADA AL V3")
     
     fecha_actualizacion = models.DateTimeField(auto_now=True)
     

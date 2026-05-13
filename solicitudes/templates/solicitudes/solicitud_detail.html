@@ -1,10 +1,43 @@
 {% extends "solicitudes/base.html" %}
-
 {% load humanize %}
 
 {% block title %}Detalle de Solicitud #{{ object.id }}{% endblock %}
 
 {% block content %}
+<style>
+    /* Estilos personalizados para igualar el diseño del papel */
+    .form-section-title {
+        text-align: center;
+        font-weight: bold;
+        font-style: italic;
+        border-top: 2px solid #333;
+        border-bottom: 2px solid #333;
+        padding: 8px 0;
+        margin: 30px 0 20px 0;
+        background-color: transparent;
+        font-size: 0.95rem;
+        color: #212529;
+    }
+    .form-label-centered {
+        display: block;
+        text-align: center;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 0.4rem;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+    }
+    .custom-radio-group .form-check {
+        margin-right: 1.5rem;
+    }
+    .custom-radio-group .form-check-label {
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+</style>
+
 <div class="row g-4">
     {# Columna de Detalles de la Solicitud #}
     <div class="col-lg-5 col-md-12">
@@ -54,106 +87,240 @@
                 <form method="post" action="{% url 'seguimiento-update' solicitud_pk=object.pk %}">
                     {% csrf_token %}
                     
-                    <div class="row g-3">
-                        {% for field in seguimiento_form %}
-                            {% if field.field.widget.input_type != 'checkbox' %}
-                                
-                                {# Lógica para definir si el campo ocupa 6 columnas (col-md-6) o 12 (col-md-12) #}
-                                {% with col_class="col-md-6" %}
-                                    {# Campos anchos: Observaciones, Ajustes, Enlaces, Recibo #}
-                                    {% if 'observacion' in field.name or field.name == 'solicitud_ajuste' or 'enlace' in field.name or field.name == 'fecha_recibo' or field.name == 'quien_recibe_almacen' %}
-                                        {% with col_class="col-md-12" %}{% endwith %}
-                                    {% endif %}
-                                    
-                                    <div class="{{ col_class }}">
-                                        <div class="form-group">
-                                            
-                                            <label for="{{ field.id_for_label }}" class="form-label">
-                                                {{ field.label }}
-                                                {% if field.name == 'status_final_compra' %}
-                                                    <span class="badge bg-info text-dark ms-2">{{ object.get_tipo_compra_display }}</span>
-                                                {% endif %}
-                                            </label>
-                                            
-                                            {# Lógica para campos de enlace #}
-                                            {% if 'enlace' in field.name and field.value %}
-                                                <div class="input-group">
-                                                    {{ field }}
-                                                    <a href="{{ field.value }}" target="_blank" class="btn btn-primary" title="Abrir Enlace">
-                                                        <i class="bi bi-box-arrow-up-right"></i> Abrir Enlace </a>
-                                                </div>
-                                            {% else %}
-                                                {{ field }}
-                                            {% endif %}
-
-                                            {# Mensajes de ayuda y errores #}
-                                            {% for error in field.errors %}
-                                                <div class="invalid-feedback d-block">{{ error }}</div> 
-                                            {% endfor %}
-                                            {% if field.help_text %}
-                                                <small class="form-text text-muted">{{ field.help_text }}</small>
-                                            {% endif %}
-                                        </div>
-                                    </div> 
-                                {% endwith %}
-                            {% endif %}
-                            
-                            {% if field.name == 'observacion_2' %}
-                                <div class="col-md-12">
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <div class="form-check pt-4">
-                                                {{ seguimiento_form.calibracion }}
-                                                <label class="form-check-label" for="{{ seguimiento_form.calibracion.id_for_label }}">
-                                                    {{ seguimiento_form.calibracion.label }}
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-check pt-4">
-                                                {{ seguimiento_form.mantenimiento }}
-                                                <label class="form-check-label" for="{{ seguimiento_form.mantenimiento.id_for_label }}">
-                                                    {{ seguimiento_form.mantenimiento.label }}
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-check pt-4">
-                                                {{ seguimiento_form.caracterizacion }}
-                                                <label class="form-check-label" for="{{ seguimiento_form.caracterizacion.id_for_label }}">
-                                                    {{ seguimiento_form.caracterizacion.label }}
-                                                </label>
-                                            </div>
-                                        </div>
-                                        {% if seguimiento_form.calibracion.errors or seguimiento_form.mantenimiento.errors or seguimiento_form.caracterizacion.errors %}
-                                            <div class="col-md-12">
-                                                {% for error in seguimiento_form.calibracion.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
-                                                {% for error in seguimiento_form.mantenimiento.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
-                                                {% for error in seguimiento_form.caracterizacion.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
-                                            </div>
-                                        {% endif %}
-                                    </div>
+                    <div class="mb-3 text-center">
+                        <label class="form-label fw-bold text-muted mb-3 d-block" style="font-size: 0.9rem;">
+                            CONDICIÓN <br>
+                            <small class="fw-normal">(Cambiar de lista desplegable a cuadros de selección)</small>
+                        </label>
+                        <div class="d-flex justify-content-center flex-wrap custom-radio-group">
+                            {% for radio in seguimiento_form.condicion %}
+                                <div class="form-check form-check-inline d-flex align-items-center">
+                                    {{ radio.tag }}
+                                    <label class="form-check-label ms-2 mt-1" for="{{ radio.id_for_label }}">
+                                        {{ radio.choice_label }}
+                                    </label>
                                 </div>
-                            {% endif %}
                             {% endfor %}
+                        </div>
+                        <div class="text-danger small mt-1">{{ seguimiento_form.condicion.errors }}</div>
                     </div>
+
+                    <div class="form-section-title">PEDIDOS INGRESADOS AL V3- PANAMA COMPRA</div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-centered">{{ seguimiento_form.numero_partida.label }}</label>
+                            {{ seguimiento_form.numero_partida }}
+                            <div class="text-danger small">{{ seguimiento_form.numero_partida.errors }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-centered">{{ seguimiento_form.sbs_numero.label }}</label>
+                            {{ seguimiento_form.sbs_numero }}
+                            <div class="text-danger small">{{ seguimiento_form.sbs_numero.errors }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-centered">{{ seguimiento_form.fecha_ingreso_v3.label }}</label>
+                            {{ seguimiento_form.fecha_ingreso_v3 }}
+                            <div class="text-danger small">{{ seguimiento_form.fecha_ingreso_v3.errors }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-centered">{{ seguimiento_form.enlace_sbs.label }}</label>
+                            {% if seguimiento_form.enlace_sbs.value %}
+                                <div class="input-group">
+                                    {{ seguimiento_form.enlace_sbs }}
+                                    <a href="{{ seguimiento_form.enlace_sbs.value }}" target="_blank" class="btn btn-primary" title="Abrir Enlace"><i class="bi bi-box-arrow-up-right"></i></a>
+                                </div>
+                            {% else %}
+                                {{ seguimiento_form.enlace_sbs }}
+                            {% endif %}
+                            <div class="text-danger small">{{ seguimiento_form.enlace_sbs.errors }}</div>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">PEDIDOS EVALUADOS</div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-centered">{{ seguimiento_form.fecha_pedido_evaluado.label }}</label>
+                            {{ seguimiento_form.fecha_pedido_evaluado }}
+                            <div class="text-danger small">{{ seguimiento_form.fecha_pedido_evaluado.errors }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-centered">{{ seguimiento_form.enlace_evaluacion.label }} (nuevo)</label>
+                            {% if seguimiento_form.enlace_evaluacion.value %}
+                                <div class="input-group">
+                                    {{ seguimiento_form.enlace_evaluacion }}
+                                    <a href="{{ seguimiento_form.enlace_evaluacion.value }}" target="_blank" class="btn btn-primary"><i class="bi bi-box-arrow-up-right"></i></a>
+                                </div>
+                            {% else %}
+                                {{ seguimiento_form.enlace_evaluacion }}
+                            {% endif %}
+                            <div class="text-danger small">{{ seguimiento_form.enlace_evaluacion.errors }}</div>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">DETALLES DE LA ORDEN DE COMPRA REFRENDADA</div>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.oc_numero.label }}</label>
+                                {{ seguimiento_form.oc_numero }}
+                                <div class="text-danger small">{{ seguimiento_form.oc_numero.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.monto_oc.label }}</label>
+                                {{ seguimiento_form.monto_oc }}
+                                <div class="text-danger small">{{ seguimiento_form.monto_oc.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.plazo_entrega.label }}</label>
+                                {{ seguimiento_form.plazo_entrega }}
+                                <div class="text-danger small">{{ seguimiento_form.plazo_entrega.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.vencimiento_oc.label }}</label>
+                                {{ seguimiento_form.vencimiento_oc }}
+                                <div class="text-danger small">{{ seguimiento_form.vencimiento_oc.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.enlace_orden_compra.label }}</label>
+                                {% if seguimiento_form.enlace_orden_compra.value %}
+                                    <div class="input-group">
+                                        {{ seguimiento_form.enlace_orden_compra }}
+                                        <a href="{{ seguimiento_form.enlace_orden_compra.value }}" target="_blank" class="btn btn-primary"><i class="bi bi-box-arrow-up-right"></i></a>
+                                    </div>
+                                {% else %}
+                                    {{ seguimiento_form.enlace_orden_compra }}
+                                {% endif %}
+                                <div class="text-danger small">{{ seguimiento_form.enlace_orden_compra.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.quien_recibe_almacen.label }} <br><small class="text-lowercase text-muted">(cuadro de observación)</small></label>
+                                {{ seguimiento_form.quien_recibe_almacen }}
+                                <div class="text-danger small">{{ seguimiento_form.quien_recibe_almacen.errors }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.fecha_publicacion_oc.label }}</label>
+                                {{ seguimiento_form.fecha_publicacion_oc }}
+                                <div class="text-danger small">{{ seguimiento_form.fecha_publicacion_oc.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.tipo_entrega.label }}</label>
+                                {{ seguimiento_form.tipo_entrega }}
+                                <div class="text-danger small">{{ seguimiento_form.tipo_entrega.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.tipo_plazo.label }}</label>
+                                {{ seguimiento_form.tipo_plazo }}
+                                <div class="text-danger small">{{ seguimiento_form.tipo_plazo.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.proveedor.label }}</label>
+                                {{ seguimiento_form.proveedor }}
+                                <div class="text-danger small">{{ seguimiento_form.proveedor.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.status_final_compra.label }}</label>
+                                {{ seguimiento_form.status_final_compra }}
+                                <div class="text-danger small">{{ seguimiento_form.status_final_compra.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.fecha_recibo.label }}</label>
+                                {{ seguimiento_form.fecha_recibo }}
+                                <div class="text-danger small">{{ seguimiento_form.fecha_recibo.errors }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">DETALLES DEL RECIBIDO CONFORME DEL SERVICIO REALIZADO</div>
                     
-                    <div class="mt-4">
+                    <div class="row g-3 mb-4 text-center justify-content-center">
+                        <div class="col-auto">
+                            <div class="form-check form-check-inline d-flex align-items-center">
+                                {{ seguimiento_form.calibracion }}
+                                <label class="form-check-label ms-2 fw-bold" for="{{ seguimiento_form.calibracion.id_for_label }}">{{ seguimiento_form.calibracion.label }}</label>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="form-check form-check-inline d-flex align-items-center">
+                                {{ seguimiento_form.caracterizacion }}
+                                <label class="form-check-label ms-2 fw-bold" for="{{ seguimiento_form.caracterizacion.id_for_label }}">{{ seguimiento_form.caracterizacion.label }}</label>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="form-check form-check-inline d-flex align-items-center">
+                                {{ seguimiento_form.mantenimiento }}
+                                <label class="form-check-label ms-2 fw-bold" for="{{ seguimiento_form.mantenimiento.id_for_label }}">{{ seguimiento_form.mantenimiento.label }}</label>
+                            </div>
+                        </div>
+                        <div class="text-danger small w-100">
+                            {{ seguimiento_form.calibracion.errors }}
+                            {{ seguimiento_form.caracterizacion.errors }}
+                            {{ seguimiento_form.mantenimiento.errors }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-centered">{{ seguimiento_form.numero_recibido_conforme.label }} <br><small class="text-lowercase text-muted">(cuadro de observación)</small></label>
+                            {{ seguimiento_form.numero_recibido_conforme }}
+                            <div class="text-danger small">{{ seguimiento_form.numero_recibido_conforme.errors }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-centered">{{ seguimiento_form.enlace_recibido_conforme.label }} (nuevo)</label>
+                            {% if seguimiento_form.enlace_recibido_conforme.value %}
+                                <div class="input-group">
+                                    {{ seguimiento_form.enlace_recibido_conforme }}
+                                    <a href="{{ seguimiento_form.enlace_recibido_conforme.value }}" target="_blank" class="btn btn-primary"><i class="bi bi-box-arrow-up-right"></i></a>
+                                </div>
+                            {% else %}
+                                {{ seguimiento_form.enlace_recibido_conforme }}
+                            {% endif %}
+                            <div class="text-danger small">{{ seguimiento_form.enlace_recibido_conforme.errors }}</div>
+                        </div>
+                    </div>
+
+                    <div class="form-section-title">SOLICITUD DE AJUSTE POR PARTE DEL PROVEEDOR</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.solicitud_ajuste.label }}</label>
+                                {{ seguimiento_form.solicitud_ajuste }}
+                                <div class="text-danger small">{{ seguimiento_form.solicitud_ajuste.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.nuevo_plazo_entrega.label }}</label>
+                                {{ seguimiento_form.nuevo_plazo_entrega }}
+                                <div class="text-danger small">{{ seguimiento_form.nuevo_plazo_entrega.errors }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.numero_ajuste.label }}</label>
+                                {{ seguimiento_form.numero_ajuste }}
+                                <div class="text-danger small">{{ seguimiento_form.numero_ajuste.errors }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-centered">{{ seguimiento_form.observacion_ajuste.label }}</label>
+                                {{ seguimiento_form.observacion_ajuste }}
+                                <div class="text-danger small">{{ seguimiento_form.observacion_ajuste.errors }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-top">
                         {% if user.job_position == 'Asistente Administrativo' or user.job_position == 'Director Encargado' %}
-                            
                             <button type="submit" class="btn btn-success btn-lg w-100 shadow-sm">
                                 <i class="bi bi-save"></i> Guardar Seguimiento
                             </button>
-
                         {% else %}
-
                             <button type="submit" class="btn btn-secondary btn-lg w-100" disabled>
                                 <i class="bi bi-lock"></i> Guardar Seguimiento (Acceso Restringido)
                             </button>
                             <small class="form-text text-danger text-center d-block mt-2">
                                 Solo el personal administrativo autorizado puede editar esta sección.
                             </small>
-
                         {% endif %}
                     </div>
                 </form>
@@ -165,23 +332,17 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-    // 1. Selecciona los CUATRO campos del formulario que usaremos.
     const fechaPublicacionInput = document.getElementById('id_fecha_publicacion_oc');
     const plazoEntregaInput = document.getElementById('id_plazo_entrega');
     const vencimientoInput = document.getElementById('id_vencimiento_oc');
-    // --- NUEVO: Selector para el tipo de plazo. AJUSTA EL ID SI ES NECESARIO ---
     const tipoPlazoInput = document.getElementById('id_tipo_plazo_entrega'); 
 
-    // Función para añadir días HÁBILES a una fecha (lunes a viernes).
     function agregarDiasHabiles(fechaInicial, dias) {
         if (dias <= 0) return new Date(fechaInicial.valueOf());
-        
         let fecha = new Date(fechaInicial.valueOf());
         let diasAgregados = 0;
-
         while (diasAgregados < dias) {
             fecha.setDate(fecha.getDate() + 1);
-            // getDay() devuelve 0 (Domingo) y 6 (Sábado).
             if (fecha.getDay() !== 0 && fecha.getDay() !== 6) {
                 diasAgregados++;
             }
@@ -189,7 +350,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return fecha;
     }
 
-    // --- NUEVA FUNCIÓN: Para añadir días CALENDARIO (corridos).
     function agregarDiasCalendario(fechaInicial, dias) {
         if (dias < 0) dias = 0;
         let fecha = new Date(fechaInicial.valueOf());
@@ -197,57 +357,42 @@ document.addEventListener('DOMContentLoaded', function() {
         return fecha;
     }
 
-
-    // 2. La función principal que se ejecutará cada vez que cambie un valor.
     function calcularFechaVencimiento() {
-        // Obtiene los valores actuales de los campos
         const fechaPublicacionValor = fechaPublicacionInput.value;
         const plazoEntregaValor = parseInt(plazoEntregaInput.value, 10);
-        const tipoPlazoValor = tipoPlazoInput.value; // 'Habiles' o 'Calendario'
+        const tipoPlazoValor = tipoPlazoInput.value;
 
-        // --- Verificación mejorada ---
         if (!fechaPublicacionValor || isNaN(plazoEntregaValor) || plazoEntregaValor < 0 || !tipoPlazoValor) {
             vencimientoInput.value = '';
             return;
         }
 
-        // --- Lógica de Cálculo Condicional ---
         const fechaBase = new Date(fechaPublicacionValor + 'T00:00:00');
         let fechaFinal;
-
-        // Siempre se suman 2 días hábiles como base, según tu requerimiento.
         const fechaConDiasBase = agregarDiasHabiles(fechaBase, 2);
 
         if (tipoPlazoValor === 'Habiles') {
-            // Si es 'Habiles', sumamos el plazo también como días hábiles.
             fechaFinal = agregarDiasHabiles(fechaConDiasBase, plazoEntregaValor);
         } else if (tipoPlazoValor === 'Calendario') {
-            // Si es 'Calendario', sumamos el plazo como días corridos.
             fechaFinal = agregarDiasCalendario(fechaConDiasBase, plazoEntregaValor);
         } else {
             vencimientoInput.value = '';
             return;
         }
         
-        // --- Formateo y Asignación (sin cambios) ---
         const anio = fechaFinal.getFullYear();
         const mes = String(fechaFinal.getMonth() + 1).padStart(2, '0');
         const dia = String(fechaFinal.getDate()).padStart(2, '0');
         
-        const fechaFormateada = `${anio}-${mes}-${dia}`;
-        vencimientoInput.value = fechaFormateada;
+        vencimientoInput.value = `${anio}-${mes}-${dia}`;
     }
 
-    // 3. Asigna los "event listeners" (escuchadores).
-    fechaPublicacionInput.addEventListener('change', calcularFechaVencimiento);
-    plazoEntregaInput.addEventListener('input', calcularFechaVencimiento);
-    // --- NUEVO: Escuchador para el cambio de tipo de plazo ---
-    tipoPlazoInput.addEventListener('change', calcularFechaVencimiento);
-
-
-    // 4. Llama a la función una vez al cargar la página para calcular el valor inicial si lo hay.
-    calcularFechaVencimiento();
-
+    if(fechaPublicacionInput && plazoEntregaInput && tipoPlazoInput) {
+        fechaPublicacionInput.addEventListener('change', calcularFechaVencimiento);
+        plazoEntregaInput.addEventListener('input', calcularFechaVencimiento);
+        tipoPlazoInput.addEventListener('change', calcularFechaVencimiento);
+        calcularFechaVencimiento();
+    }
 });
 </script>
 {% endblock %}
