@@ -131,17 +131,24 @@ class SolicitudDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 class SeguimientoUpdateView(LoginRequiredMixin, UpdateView):
     model = SeguimientoCompra
     form_class = SeguimientoCompraForm
-    template_name = 'solicitudes/seguimiento_form.html' # Puedes crear una plantilla específica si lo deseas
+    # Cambiamos la plantilla a la de detalle
+    template_name = 'solicitudes/solicitud_detail.html' 
 
     def get_object(self, queryset=None):
-        # Obtenemos el seguimiento a partir del PK de la solicitud
         solicitud_pk = self.kwargs.get('solicitud_pk')
         solicitud = get_object_or_404(Solicitud, pk=solicitud_pk)
         seguimiento, created = SeguimientoCompra.objects.get_or_create(solicitud=solicitud)
         return seguimiento
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # IMPORTANTE: El template 'solicitud_detail.html' espera la variable 'object' 
+        # como si fuera la Solicitud, no el Seguimiento.
+        context['object'] = self.object.solicitud 
+        context['seguimiento_form'] = context['form'] # Reutilizamos el form del UpdateView
+        return context
+
     def get_success_url(self):
-        # Redirige de vuelta al detalle de la solicitud después de actualizar
         return reverse_lazy('solicitud-detail', kwargs={'pk': self.object.solicitud.pk})
 
 
