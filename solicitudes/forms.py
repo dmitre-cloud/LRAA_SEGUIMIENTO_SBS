@@ -29,12 +29,17 @@ class SeguimientoCompraForm(forms.ModelForm):
         choices=SeguimientoCompra.CONDICION_CHOICES,
         widget=forms.CheckboxSelectMultiple(),
         required=False,
-        label="CONDICIÓN"
+        label="Condición"
     )
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+
+        # 🌟 NUEVO: Convertir el texto guardado ("valor1,valor2") a lista para que 
+        # los checkboxes se marquen automáticamente al cargar el formulario.
+        if self.instance and self.instance.pk and self.instance.condicion:
+            self.initial['condicion'] = self.instance.condicion.split(',')
 
         roles_permitidos = ['Asistente Administrativo', 'Director Encargado']
         can_edit = user and user.job_position in roles_permitidos
@@ -46,10 +51,8 @@ class SeguimientoCompraForm(forms.ModelForm):
             if isinstance(field.widget, forms.CheckboxInput):
                 if 'form-check-input' not in current_classes:
                     field.widget.attrs['class'] = (current_classes + ' form-check-input').strip()
-            # Nuevo: Clase para los múltiples checkboxes
             elif isinstance(field.widget, forms.CheckboxSelectMultiple):
                 field.widget.attrs['class'] = 'form-check-input'
-
             elif isinstance(field.widget, forms.Select):
                 if 'form-select' not in current_classes:
                     field.widget.attrs['class'] = (current_classes + ' form-select').strip()
@@ -59,7 +62,9 @@ class SeguimientoCompraForm(forms.ModelForm):
 
             # --- 2. Aplicación de Restricciones ---
             if not can_edit:
-                if isinstance(field.widget, forms.CheckboxInput):
+                # 🌟 CORRECCIÓN: Agregamos forms.CheckboxSelectMultiple aquí para que se 
+                # deshabilite si no tiene permisos, ya que 'readonly' no funciona en checkboxes.
+                if isinstance(field.widget, (forms.CheckboxInput, forms.CheckboxSelectMultiple)):
                     field.widget.attrs['disabled'] = True
                 else:
                     field.widget.attrs['readonly'] = True

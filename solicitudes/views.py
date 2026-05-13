@@ -131,8 +131,14 @@ class SolicitudDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 class SeguimientoUpdateView(LoginRequiredMixin, UpdateView):
     model = SeguimientoCompra
     form_class = SeguimientoCompraForm
-    # Cambiamos la plantilla a la de detalle
     template_name = 'solicitudes/solicitud_detail.html' 
+
+    # 🌟 NUEVO: Este método asegura que el usuario que está haciendo la petición 
+    # se envíe al formulario cuando se procesa el botón de "Guardar".
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user # <--- Esto permite que 'can_edit' funcione
+        return kwargs
 
     def get_object(self, queryset=None):
         solicitud_pk = self.kwargs.get('solicitud_pk')
@@ -142,10 +148,8 @@ class SeguimientoUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # IMPORTANTE: El template 'solicitud_detail.html' espera la variable 'object' 
-        # como si fuera la Solicitud, no el Seguimiento.
         context['object'] = self.object.solicitud 
-        context['seguimiento_form'] = context['form'] # Reutilizamos el form del UpdateView
+        context['seguimiento_form'] = context['form'] 
         return context
 
     def get_success_url(self):
