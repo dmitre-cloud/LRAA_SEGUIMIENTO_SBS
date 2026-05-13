@@ -160,7 +160,20 @@ class SeguimientoCompra(models.Model):
         on_delete=models.CASCADE, 
         related_name='seguimiento'
     )
-
+    def get_condiciones_list(self):
+        """Retorna una lista de diccionarios con el código y la etiqueta para el listado"""
+        if not self.condicion:
+            return []
+        
+        # Diccionario para buscar etiquetas rápidamente
+        choices_dict = dict(self.CONDICION_CHOICES)
+        codigos = self.condicion.split(',')
+        
+        return [
+            {'codigo': c, 'label': choices_dict.get(c, c)} 
+            for c in codigos
+        ]
+        
     # Campos del seguimiento
     numero_partida = models.CharField(max_length=100, blank=True, verbose_name="NÚMERO DE PARTIDA")
     condicion = models.CharField(max_length=255, choices=CONDICION_CHOICES, blank=True, verbose_name="CONDICIÓN")

@@ -10,14 +10,22 @@
     .ref-turquesa { background-color: #0fa999 !important; color: white; } /* Turquoise */
     .ref-morado { background-color: #800080 !important; color: white; }  /* Purple */
     
-    /* Colores para la Condición */
+    /* Aseguramos que los nombres coincidan con los keys de tus CHOICES */
     .cond-recorrido { background-color: #0d6efd !important; color: white !important; }
-    .cond-v3 { background-color: #fd7e14 !important; color: white !important; }
+    .cond-ingresado_v3 { background-color: #fd7e14 !important; color: white !important; } /* Ajustado */
     .cond-evaluado { background-color: #0dcaf0 !important; color: #000 !important; }
     .cond-refrendado { background-color: #6610f2 !important; color: white !important; }
     .cond-anulado { background-color: #dc3545 !important; color: white !important; }
     .cond-finalizado { background-color: #198754 !important; color: white !important; }
     .cond-vacio { background-color: #6c757d !important; color: white !important; }
+
+    /* Contenedor para múltiples badges */
+    .badge-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        justify-content: center;
+    }
     
     /* Para que el badge se vea bien dentro de la tabla */
     .badge-ref {
@@ -79,20 +87,17 @@
                     <td>{{ solicitud.get_departamento_display }}</td>
                     <td>B/. {{ solicitud.monto_comprometido_sbs|intcomma }}</td>
                     <td class="text-center align-middle">
-                        {% if solicitud.seguimiento and solicitud.seguimiento.condicion %}
-                            <span class="badge 
-                                {% if solicitud.seguimiento.condicion == 'recorrido' %}cond-recorrido
-                                {% elif solicitud.seguimiento.condicion == 'ingresado_v3' %}cond-v3
-                                {% elif solicitud.seguimiento.condicion == 'evaluado' %}cond-evaluado
-                                {% elif solicitud.seguimiento.condicion == 'refrendado' %}cond-refrendado
-                                {% elif solicitud.seguimiento.condicion == 'anulado' %}cond-anulado
-                                {% elif solicitud.seguimiento.condicion == 'finalizado' %}cond-finalizado
-                                {% endif %}">
-                                {{ solicitud.seguimiento.get_condicion_display }}
-                            </span>
-                        {% else %}
-                            <span class="badge cond-vacio">Sin Iniciar</span>
-                        {% endif %}
+                        <div class="badge-container">
+                            {% if solicitud.seguimiento and solicitud.seguimiento.condicion %}
+                                {% for item in solicitud.seguimiento.get_condiciones_list %}
+                                    <span class="badge cond-{{ item.codigo }}">
+                                        {{ item.label }}
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="badge cond-vacio">Sin Iniciar</span>
+                            {% endif %}
+                        </div>
                     </td>
                     <td class="text-nowrap align-middle">
                         <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn btn-sm btn-info">Ver</a>
