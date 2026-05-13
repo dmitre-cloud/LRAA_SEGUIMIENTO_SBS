@@ -5,6 +5,7 @@ class SolicitudForm(forms.ModelForm):
     # ... (este formulario no necesita cambios)
     class Meta:
         model = Solicitud
+        # El campo 'urgente' se incluirá automáticamente al no estar en exclude
         # 👈 AGREGAMOS 'ref_departamento' a la lista de excluidos
         exclude = ('solicitante', 'ref_departamento') 
         widgets = {
@@ -15,6 +16,7 @@ class SolicitudForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
+            # Esto asignará 'form-select' automáticamente a nuestro nuevo campo 'urgente'
             if isinstance(field.widget, forms.Select):
                 field.widget.attrs['class'] = 'form-select'
             elif not isinstance(field.widget, forms.CheckboxInput):

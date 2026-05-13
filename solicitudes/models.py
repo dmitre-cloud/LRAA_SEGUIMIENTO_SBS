@@ -23,6 +23,11 @@ class Solicitud(models.Model):
         ('Servicio', 'Servicio'),
     ]
 
+    URGENTE_CHOICES = [
+        ('Aplica', 'Aplica'),
+        ('No Aplica', 'No Aplica'),
+    ]
+
     # Relación con el usuario que crea la solicitud
     solicitante = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
@@ -35,20 +40,31 @@ class Solicitud(models.Model):
         choices=DEPARTAMENTO_CHOICES,
         help_text="El departamento que hace la solicitud"
     )
+
+    urgente = models.CharField(
+        max_length=10,
+        choices=URGENTE_CHOICES,
+        default='No Aplica',
+        help_text="Indique si la solicitud requiere trámite urgente"
+    )
+
     ref_departamento = models.CharField(
         max_length=100, 
         blank=True,
         editable=False, # 👈 IMPORTANTE: Esto evita que se muestre en el admin o forms por defecto
         help_text="Identificación automática (Ej: M-01-25)"
     )
+
     descripcion_pedido = models.TextField(
         help_text="Descripción general del pedido (SBS)"
     )
+
     monto_comprometido_sbs = models.DecimalField(
         max_digits=10, 
         decimal_places=2,
         help_text="Monto total de la SBS enviada a presupuesto"
     )
+    
     tipo_compra = models.CharField(
         max_length=10, 
         choices=TIPO_COMPRA_CHOICES,
