@@ -24,6 +24,14 @@ class SolicitudForm(forms.ModelForm):
 
 
 class SeguimientoCompraForm(forms.ModelForm):
+    # Definimos el campo explícitamente como selección múltiple
+    condicion = forms.MultipleChoiceField(
+        choices=SeguimientoCompra.CONDICION_CHOICES,
+        widget=forms.CheckboxSelectMultiple(),
+        required=False,
+        label="CONDICIÓN"
+    )
+
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
@@ -38,11 +46,10 @@ class SeguimientoCompraForm(forms.ModelForm):
             if isinstance(field.widget, forms.CheckboxInput):
                 if 'form-check-input' not in current_classes:
                     field.widget.attrs['class'] = (current_classes + ' form-check-input').strip()
-            
-            # NUEVO: Evitamos aplicar form-control a los RadioSelect para que se vean bien en línea
-            elif isinstance(field.widget, forms.RadioSelect):
-                pass 
-                
+            # Nuevo: Clase para los múltiples checkboxes
+            elif isinstance(field.widget, forms.CheckboxSelectMultiple):
+                field.widget.attrs['class'] = 'form-check-input'
+
             elif isinstance(field.widget, forms.Select):
                 if 'form-select' not in current_classes:
                     field.widget.attrs['class'] = (current_classes + ' form-select').strip()
@@ -52,7 +59,7 @@ class SeguimientoCompraForm(forms.ModelForm):
 
             # --- 2. Aplicación de Restricciones ---
             if not can_edit:
-                if isinstance(field.widget, (forms.CheckboxInput, forms.RadioSelect)):
+                if isinstance(field.widget, forms.CheckboxInput):
                     field.widget.attrs['disabled'] = True
                 else:
                     field.widget.attrs['readonly'] = True
@@ -60,12 +67,19 @@ class SeguimientoCompraForm(forms.ModelForm):
                     if 'bg-light' not in current_classes:
                         field.widget.attrs['class'] = (current_classes + ' bg-light').strip()
 
+    # 2. Guardar valores (De ['valor1', 'valor2'] a "valor1,valor2")
+    def clean_condicion(self):
+        data = self.cleaned_data.get('condicion')
+        if isinstance(data, list):
+            return ",".join(data)
+        return data
+
     class Meta:
         model = SeguimientoCompra
         exclude = ('solicitud', 'observacion_1', 'observacion_2', 'fecha_inicial_mant_calib_caract') # Excluimos los que no están en el diseño
         
         widgets = {
-            'condicion': forms.RadioSelect(), # <-- Agregado para que sea de selección múltiple horizontal
+            
             'plazo_entrega': forms.NumberInput(attrs={'id': 'id_plazo_entrega'}),
             'tipo_plazo': forms.Select(attrs={'id': 'id_tipo_plazo_entrega'}),
             'fecha_publicacion_oc': forms.DateInput(attrs={'type': 'date', 'id': 'id_fecha_publicacion_oc'}, format='%Y-%m-%d'),

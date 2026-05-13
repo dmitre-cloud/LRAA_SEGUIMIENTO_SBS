@@ -87,17 +87,18 @@
                 <form method="post" action="{% url 'seguimiento-update' solicitud_pk=object.pk %}">
                     {% csrf_token %}
                     
+                    <!-- Sección de CONDICIÓN (Selección Múltiple) -->
                     <div class="mb-3 text-center">
                         <label class="form-label fw-bold text-muted mb-3 d-block" style="font-size: 0.9rem;">
                             CONDICIÓN <br>
-                            <small class="fw-normal">(Cambiar de lista desplegable a cuadros de selección)</small>
+                            <small class="fw-normal">(Selección múltiple mediante cuadros)</small>
                         </label>
                         <div class="d-flex justify-content-center flex-wrap custom-radio-group">
-                            {% for radio in seguimiento_form.condicion %}
-                                <div class="form-check form-check-inline d-flex align-items-center">
-                                    {{ radio.tag }}
-                                    <label class="form-check-label ms-2 mt-1" for="{{ radio.id_for_label }}">
-                                        {{ radio.choice_label }}
+                            {% for check in seguimiento_form.condicion %}
+                                <div class="form-check form-check-inline d-flex align-items-center mb-2">
+                                    {{ check.tag }}
+                                    <label class="form-check-label ms-2 fw-bold text-uppercase" style="font-size: 0.8rem;" for="{{ check.id_for_label }}">
+                                        {{ check.choice_label }}
                                     </label>
                                 </div>
                             {% endfor %}
