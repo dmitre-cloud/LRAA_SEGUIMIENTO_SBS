@@ -81,7 +81,7 @@
                             <th class="col-desc">DESCRIPCIÓN</th>
                             <th class="col-entrega">TIPO ENTREGA</th>
                             <th class="col-prov">PROVEEDOR</th>
-                            <th class="col-monto">B/. MONTO TOTAL</th>
+                            <th class="col-monto">B/. MONTO TOTAL DE LA OC</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -106,7 +106,7 @@
                     {% if seguimientos %}
                     <tfoot class="table-dark">
                         <tr>
-                            <td colspan="6" class="text-end px-3"><strong>MONTO TOTAL ACUMULADO:</strong></td>
+                            <td colspan="6" class="text-end px-3"><strong>MONTO TOTAL:</strong></td>
                             <td class="text-end"><strong>B/. {{ total_monto_oc|floatformat:2|intcomma }}</strong></td>
                         </tr>
                     </tfoot>
