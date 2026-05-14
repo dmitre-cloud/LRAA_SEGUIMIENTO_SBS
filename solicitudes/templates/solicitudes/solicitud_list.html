@@ -100,9 +100,9 @@
                         </div>
                     </td>
                     <td class="text-nowrap align-middle">
-                        <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn btn-sm btn-info">Ver</a>
-                        <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn btn-sm btn-warning">Editar</a>
-                        <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                        <a href="{% url 'solicitud-detail' solicitud.pk %}" class="btn btn-sm btn-info"><i class="fa-solid fa-eye"></i></a>
+                        <a href="{% url 'solicitud-update' solicitud.pk %}" class="btn btn-sm btn-warning"><i class="fa-solid fa-pen-to-square"></i></a>
+                        <a href="{% url 'solicitud-delete' solicitud.pk %}" class="btn btn-sm btn-danger"><i class="fa-solid fa-circle-minus"></i></a>
                     </td>
                 </tr>
                 {% empty %}
