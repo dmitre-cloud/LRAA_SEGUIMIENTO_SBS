@@ -6,7 +6,34 @@
 
 {% block content %}
 <style>
-    /* Estilos para ocultar la tabla real en la web al imprimir y usar solo nuestra ventana emergente */
+    /* 1. Forzamos que el main del base.html ignore el límite de ancho solo en esta página */
+    main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    /* 2. Estilos para que la tabla sea legible en ancho completo */
+    #main-data-table {
+        table-layout: fixed; /* Ayuda a respetar los anchos que definamos */
+        width: 100%;
+    }
+
+    /* Definición de anchos sugeridos para que no se vea vacío */
+    .col-ref { width: 90px; }
+    .col-sbs { width: 100px; }
+    .col-oc { width: 100px; }
+    .col-desc { width: auto; } /* La descripción crecerá para llenar el espacio */
+    .col-entrega { width: 120px; }
+    .col-prov { width: 220px; }
+    .col-monto { width: 140px; }
+
+    #main-data-table td {
+        word-wrap: break-word;
+        font-size: 0.9rem;
+    }
+
     @media print {
         body * { visibility: hidden; }
         #report-table-section, #report-table-section * { visibility: visible; }
@@ -15,7 +42,7 @@
     }
 </style>
 
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <div class="card shadow-sm">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
             <h4 class="mb-0">📊 Reporte de Seguimientos</h4>
@@ -35,8 +62,8 @@
                     <div class="col-md-2">{{ filter_form.condicion.label_tag }}{{ filter_form.condicion }}</div>
                     <div class="col-md-3">{{ filter_form.status_final_compra.label_tag }}{{ filter_form.status_final_compra }}</div>
                     
-                    <div class="col-md-3 mt-2">{{ filter_form.tipo_compra.label_tag }}{{ filter_form.tipo_compra }}</div>
-                    <div class="col-md-6 mt-2">{{ filter_form.proveedor.label_tag }}{{ filter_form.proveedor }}</div>
+                    <div class="col-md-2 mt-2">{{ filter_form.tipo_compra.label_tag }}{{ filter_form.tipo_compra }}</div>
+                    <div class="col-md-7 mt-2">{{ filter_form.proveedor.label_tag }}{{ filter_form.proveedor }}</div>
                     
                     <div class="col-md-3 mt-2 d-grid"> 
                         <button type="submit" class="btn btn-primary">🔎 Filtrar Resultados</button>
@@ -46,29 +73,29 @@
 
             <div class="table-responsive" id="report-table-section">
                 <table class="table table-striped table-hover table-sm align-middle" id="main-data-table">
-                    <thead class="table-dark" style="font-size: 11.4px;">
-                        <tr>
-                            <th># REFERENCIA</th> 
-                            <th>NÚMERO DE SBS</th>
-                            <th>NÚMERO DE OC</th>
-                            <th>DESCRIPCIÓN</th>
-                            <th>TIPO DE ENTREGA (PARCIAL O TOTAL)</th>
-                            <th>PROVEEDOR</th>
-                            <th>B/. MONTO TOTAL DE LA OC</th>
+                    <thead class="table-dark">
+                        <tr style="font-size: 11.4px; text-align: center;">
+                            <th class="col-ref"># REFERENCIA</th> 
+                            <th class="col-sbs">NÚMERO SBS</th>
+                            <th class="col-oc">NÚMERO OC</th>
+                            <th class="col-desc">DESCRIPCIÓN</th>
+                            <th class="col-entrega">TIPO ENTREGA</th>
+                            <th class="col-prov">PROVEEDOR</th>
+                            <th class="col-monto">B/. MONTO TOTAL</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for seguimiento in seguimientos %}
                         <tr>
-                            <td class="fw-bold text-primary">{{ seguimiento.solicitud.ref_departamento|default:seguimiento.solicitud.id }}</td>
-                            <td><strong>{{ seguimiento.sbs_numero|default:"--" }}</strong></td>
-                            <td>{{ seguimiento.oc_numero|default:"--" }}</td>
-                            <td title="{{ seguimiento.solicitud.descripcion_pedido }}">
+                            <td class="fw-bold text-primary text-center">{{ seguimiento.solicitud.ref_departamento|default:seguimiento.solicitud.id }}</td>
+                            <td class="text-center"><strong>{{ seguimiento.sbs_numero|default:"--" }}</strong></td>
+                            <td class="text-center">{{ seguimiento.oc_numero|default:"--" }}</td>
+                            <td style="line-height: 1.2;">
                                 {{ seguimiento.solicitud.descripcion_pedido|default:"--" }}
                             </td>
-                            <td>{{ seguimiento.get_tipo_entrega_display|default:"--" }}</td>
-                            <td>{{ seguimiento.proveedor|truncatechars:25|default:"--" }}</td>
-                            <td class="text-end">{{ seguimiento.monto_oc|floatformat:2|default:"0.00"|intcomma }}</td>
+                            <td class="text-center">{{ seguimiento.get_tipo_entrega_display|default:"--" }}</td>
+                            <td>{{ seguimiento.proveedor|default:"--" }}</td>
+                            <td class="text-end fw-bold">{{ seguimiento.monto_oc|floatformat:2|default:"0.00"|intcomma }}</td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -79,7 +106,7 @@
                     {% if seguimientos %}
                     <tfoot class="table-dark">
                         <tr>
-                            <td colspan="6" class="text-end px-3"><strong>MONTO TOTAL:</strong></td>
+                            <td colspan="6" class="text-end px-3"><strong>MONTO TOTAL ACUMULADO:</strong></td>
                             <td class="text-end"><strong>B/. {{ total_monto_oc|floatformat:2|intcomma }}</strong></td>
                         </tr>
                     </tfoot>
@@ -140,64 +167,67 @@
                     <style>
                         @page { 
                             size: landscape; 
-                            margin: 15mm 10mm; 
+                            margin: 10mm 5mm; 
                         }
                         
                         body { 
                             font-family: 'Arial', sans-serif; 
-                            font-size: 10px; 
+                            font-size: 9px; 
                             color: #000; 
                             margin: 0; 
                         }
 
-                        .print-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-                        .header-logo { width: 300px; }
-                        .header-logo img { max-width: 100%; max-height: 55px; }
-                        .header-center { text-align: center; font-weight: bold; font-size: 11px; flex-grow: 1; margin-top: 10px; }
+                        .print-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+                        .header-logo { width: 250px; }
+                        .header-logo img { max-width: 100%; max-height: 50px; }
+                        .header-center { text-align: center; font-weight: bold; font-size: 10px; flex-grow: 1; margin-top: 5px; }
                         
                         table { 
                             width: 100%; 
                             border-collapse: collapse; 
                             table-layout: fixed; 
-                            word-wrap: break-word;
                         }
                         
                         th, td { 
                             border: 1px solid #000; 
-                            padding: 4px; 
+                            padding: 3px; 
                             vertical-align: middle;
+                            word-wrap: break-word;
                         }
 
-                        /* Anchos de columna */
+                        /* Ajuste de columnas para impresión landscape */
                         .col-ref { width: 6%; }
-                        .col-sbs { width: 9%; }
-                        .col-oc { width: 9%; }
-                        .col-desc { width: 32%; }
-                        .col-entrega { width: 10%; }
-                        .col-prov { width: 24%; }
-                        .col-monto { width: 10%; }
+                        .col-sbs { width: 8%; }
+                        .col-oc { width: 8%; }
+                        .col-desc { width: 42%; }
+                        .col-entrega { width: 9%; }
+                        .col-prov { width: 19%; }
+                        .col-monto { width: 8%; }
 
-                        thead th { background-color: #e9ecef !important; font-weight: bold; text-align: center; }
+                        thead th { background-color: #f2f2f2 !important; font-weight: bold; text-align: center; }
                         
                         .v-text {
                             writing-mode: vertical-rl;
                             transform: rotate(180deg);
-                            height: 110px;
+                            height: 85px;
                             white-space: nowrap;
-                            padding: 5px;
+                            padding: 2px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            margin: 0 auto;
                         }
 
-                        td:nth-child(7) { text-align: right; }
+                        .text-end { text-align: right; }
+                        .text-center { text-align: center; }
 
-                        /* --- ESTILO PARA EL PIE DE PÁGINA FINAL --- */
                         .print-footer-end {
-                            margin-top: 30px; /* Espacio después de la tabla */
+                            margin-top: 15px;
                             display: flex;
                             justify-content: space-between;
-                            font-size: 10px;
+                            font-size: 8px;
                             border-top: 1px solid #000;
-                            padding-top: 8px;
-                            page-break-inside: avoid; /* Evita que el pie de página se parta en dos hojas */
+                            padding-top: 5px;
                         }
                     </style>
                 </head>
@@ -205,11 +235,10 @@
                     <div class="print-header">
                         <div class="header-logo"><img src="${logoSrc}"></div>
                         <div class="header-center">
-                            REPORTE DE SEGUIMIENTO DE LAS<br>
-                            SOLICITUDES DE BIENES Y SERVICIOS DEL<br>
-                            LABORATORIO DE REFERENCIA DE ALIMENTOS Y AGUAS
+                            REPORTE DE SEGUIMIENTO DE LAS SOLICITUDES DE BIENES Y SERVICIOS<br>
+                            LABORATORIO DE REFERENCIA DE ALIMENTOS Y AGUAS (LRAA)
                         </div>
-                        <div style="width: 50px;"></div>
+                        <div style="width: 250px; text-align: right;">Fecha: ${fechaStr}</div>
                     </div>
 
                     <table>
@@ -221,7 +250,7 @@
                                 <th class="col-desc">DESCRIPCIÓN</th>
                                 <th class="col-entrega"><div class="v-text">TIPO DE ENTREGA</div></th>
                                 <th class="col-prov">PROVEEDOR</th>
-                                <th class="col-monto"><div class="v-text">B/. MONTO TOTAL OC</div></th>
+                                <th class="col-monto"><div class="v-text">B/. MONTO TOTAL</div></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -233,8 +262,7 @@
                     </table>
 
                     <div class="print-footer-end">
-                        <div>Impreso por: {{ request.user.get_full_name|default:request.user.username }}</div>
-                        <div>Fecha: ${fechaStr}</div>
+                        <div>Generado por: {{ request.user.get_full_name|default:request.user.username }}</div>
                         <div>PÁGINA FIN DE REPORTE - ${anioActual}</div>
                     </div>
 
