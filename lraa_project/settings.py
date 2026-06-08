@@ -91,7 +91,7 @@ DATABASES = {
         #'HOST': '127.0.0.1',
         #'PORT': '3307',
 
-        # Codigo para Produccion
+        # Código para Producción
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bd_lraa_seguimiento_sbs',
         'USER': 'lraa_ssbs',
@@ -100,8 +100,8 @@ DATABASES = {
         # 'HOST': '172.31.1.72', #host externo
         'PORT': '3306', #port interno
         # 'PORT': '3346', #port externo
-    }
-}
+    } 
+} 
 
 
 # Password validation

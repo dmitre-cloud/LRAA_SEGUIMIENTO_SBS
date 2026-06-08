@@ -28,6 +28,7 @@
     .col-entrega { width: 120px; }
     .col-prov { width: 220px; }
     .col-monto { width: 140px; }
+    .col-acciones { width: 100px; } /* Ancho para la nueva columna */
 
     #main-data-table td {
         word-wrap: break-word;
@@ -82,6 +83,7 @@
                             <th class="col-entrega">TIPO ENTREGA</th>
                             <th class="col-prov">PROVEEDOR</th>
                             <th class="col-monto">B/. MONTO TOTAL DE LA OC</th>
+                            <th class="col-acciones no-print">ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -96,10 +98,15 @@
                             <td class="text-center">{{ seguimiento.get_tipo_entrega_display|default:"--" }}</td>
                             <td>{{ seguimiento.proveedor|default:"--" }}</td>
                             <td class="text-end fw-bold">{{ seguimiento.monto_oc|floatformat:2|default:"0.00"|intcomma }}</td>
+                            <td class="text-center no-print">
+                                <a href="{% url 'solicitud-detail' seguimiento.solicitud.id %}" class="btn btn-xs btn-primary align-middle shadow-sm" style="font-size: 11px; padding: 2px 6px;">
+                                    👁️ Detalles
+                                </a>
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">No se encontraron resultados.</td>
+                            <td colspan="8" class="text-center py-4 text-muted">No se encontraron resultados.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -108,8 +115,9 @@
                         <tr>
                             <td colspan="6" class="text-end px-3"><strong>MONTO TOTAL:</strong></td>
                             <td class="text-end"><strong>B/. {{ total_monto_oc|floatformat:2|intcomma }}</strong></td>
+                            <td class="no-print"></td>
                         </tr>
-                    </tfoot>
+                    </footer>
                     {% endif %}
                 </table>
             </div>
@@ -203,6 +211,9 @@
                         .col-entrega { width: 9%; }
                         .col-prov { width: 19%; }
                         .col-monto { width: 8%; }
+                        
+                        /* Ocultar por completo la columna de acciones en la impresión limpia */
+                        .no-print, .col-acciones { display: none !important; }
 
                         thead th { background-color: #f2f2f2 !important; font-weight: bold; text-align: center; }
                         
