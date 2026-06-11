@@ -152,6 +152,7 @@ class SeguimientoCompra(models.Model):
         ('OC - PENDIENTE POR ENTREGAR ***(ENTREGA PARCIAL):*** Próxima a completarse.', 'OC - PENDIENTE POR ENTREGAR ***(ENTREGA PARCIAL):*** Próxima a completarse.'),
         ('OC - SERVICIO REALIZADO ***(ENTREGA TOTAL)***COMPLETADA.', 'OC - SERVICIO REALIZADO ***(ENTREGA TOTAL)***COMPLETADA.'),
         ('OC - SERVICIO PENDIENTE POR REALIZAR (ENTREGA PARCIAL ):*** Próxima a completarse.', 'OC - SERVICIO PENDIENTE POR REALIZAR (ENTREGA PARCIAL ):*** Próxima a completarse.'),
+        ('OC - ***PARCIAL FINALIZADO***', 'OC - ***PARCIAL FINALIZADO***'),
     ]
     
     # Relación uno a uno con la solicitud original. Cada solicitud tiene un único seguimiento.
