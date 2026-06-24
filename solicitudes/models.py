@@ -222,16 +222,80 @@ class SeguimientoCompra(models.Model):
     
     fecha_actualizacion = models.DateTimeField(auto_now=True)
     
-    # --- MÉTODOS DE FECHA ---
+# --- MÉTODOS DE FECHA ACTUALIZADOS ---
+    def _obtener_feriados_panama(self, anio):
+        """Genera el conjunto de feriados nacionales oficiales de Panamá para un año dado"""
+        feriados = set()
+        
+        # 1. Feriados Fijos Nacionales
+        feriados_fijos = [
+            (1, 1),   # Año Nuevo
+            (1, 9),   # Día de los Mártires
+            (5, 1),   # Día del Trabajo
+            (11, 3),  # Separación de Panamá de Colombia
+            (11, 5),  # Consolidación de la Separación en Colón (Feriado institucional/público)
+            (11, 10), # Grito de Independencia en la Villa de Los Santos
+            (11, 28), # Independencia de Panamá de España
+            (12, 8),  # Día de la Madre
+            (12, 20), # Día de Duelo Nacional (Invasión de 1989)
+            (12, 25), # Navidad
+        ]
+        
+        for mes, dia in feriados_fijos:
+            fecha_feriado = date(anio, mes, dia)
+            feriados.add(fecha_feriado)
+            # Regla de Puente: Si cae Domingo (6), se traslada el descanso al Lunes (+1 día)
+            if fecha_feriado.weekday() == 6:
+                feriados.add(fecha_feriado + timedelta(days=1))
+                
+        # 2. Feriados Variables (Algoritmo de Meeus/Jones/Butcher para Domingo de Pascua)
+        a = anio % 19
+        b = anio // 100
+        c = anio % 100
+        d = b // 4
+        e = b % 4
+        f = (b + 8) // 25
+        g = (b - f + 1) // 3
+        h = (19 * a + b - d - g + 15) % 30
+        i = c // 4
+        k = c % 4
+        L = (32 + 2 * e + 2 * i - h - k) % 7
+        m = (a + 11 * h + 22 * L) // 451
+        mes_pascua = (h + L - 7 * m + 114) // 31
+        dia_pascua = ((h + L - 7 * m + 114) % 31) + 1
+        
+        pascua = date(anio, mes_pascua, dia_pascua)
+        
+        # Calcular días dependientes de la Pascua
+        viernes_santo = pascua - timedelta(days=2)
+        martes_carnaval = pascua - timedelta(days=47)
+        lunes_carnaval = pascua - timedelta(days=48) # Tradicionalmente libre en sector público
+        
+        feriados.add(viernes_santo)
+        feriados.add(martes_carnaval)
+        feriados.add(lunes_carnaval)
+        
+        return feriados
+
     def _agregar_dias_habiles(self, fecha_inicial, dias):
         if not isinstance(fecha_inicial, date): return None
         if dias <= 0: return fecha_inicial
+        
         dias_agregados = 0
         fecha_actual = fecha_inicial
+        feriados_cache = {} # Cache para evitar recálculos si salta de un año a otro
+        
         while dias_agregados < dias:
             fecha_actual += timedelta(days=1)
-            if fecha_actual.weekday() < 5: 
+            anio_actual = fecha_actual.year
+            
+            if anio_actual not in feriados_cache:
+                feriados_cache[anio_actual] = self._obtener_feriados_panama(anio_actual)
+                
+            # Es día hábil si es de Lunes a Viernes Y NO está en el set de feriados
+            if fecha_actual.weekday() < 5 and fecha_actual not in feriados_cache[anio_actual]:
                 dias_agregados += 1
+                
         return fecha_actual
 
     def _agregar_dias_calendario(self, fecha_inicial, dias):
@@ -242,6 +306,7 @@ class SeguimientoCompra(models.Model):
     def save(self, *args, **kwargs):
         if self.fecha_publicacion_oc and self.plazo_entrega is not None and self.tipo_plazo:
             try:
+                # Al actualizar '_agregar_dias_habiles', los 2 días base ya omitirán fines de semana y feriados de Panamá automáticamente
                 fecha_con_dias_base = self._agregar_dias_habiles(self.fecha_publicacion_oc, 2)
                 if self.tipo_plazo == 'Habiles':
                     self.vencimiento_oc = self._agregar_dias_habiles(fecha_con_dias_base, self.plazo_entrega)

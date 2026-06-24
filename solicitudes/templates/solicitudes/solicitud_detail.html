@@ -337,13 +337,89 @@ document.addEventListener('DOMContentLoaded', function() {
     const vencimientoInput = document.getElementById('id_vencimiento_oc');
     const tipoPlazoInput = document.getElementById('id_tipo_plazo_entrega'); 
 
+    // Generador de feriados de Panamá homólogo al del Backend
+    function obtenerFeriadosPanama(year) {
+        const holidays = new Set();
+        
+        // Feriados fijos (Nota: los meses en JS van de 0 a 11)
+        const fixedDays = [
+            { m: 0, d: 1 },  // Año Nuevo
+            { m: 0, d: 9 },  // Día de los Mártires
+            { m: 4, d: 1 },  // Día del Trabajo
+            { m: 10, d: 3 }, // Separación de Colombia
+            { m: 10, d: 5 }, // Consolidación de Colón
+            { m: 10, d: 10}, // Grito de Los Santos
+            { m: 10, d: 28}, // Independencia de España
+            { m: 11, d: 8 }, // Día de la Madre
+            { m: 11, d: 20}, // Día de Duelo Nacional
+            { m: 11, d: 25}  // Navidad
+        ];
+
+        fixedDays.forEach(f => {
+            let dt = new Date(year, f.m, f.d);
+            holidays.add(dt.toDateString());
+            // Si cae Domingo (0), se pasa al Lunes como día festivo por puente
+            if (dt.getDay() === 0) {
+                let monday = new Date(year, f.m, f.d + 1);
+                holidays.add(monday.toDateString());
+            }
+        });
+
+        // Cálculo astronómico de Semana Santa (Meeus/Jones/Butcher)
+        let a = year % 19,
+            b = Math.floor(year / 100),
+            c = year % 100,
+            d = Math.floor(b / 4),
+            e = b % 4,
+            f = Math.floor((b + 8) / 25),
+            g = Math.floor((b - f + 1) / 3),
+            h = (19 * a + b - d - g + 15) % 30,
+            i = Math.floor(c / 4),
+            k = c % 4,
+            l = (32 + 2 * e + 2 * i - h - k) % 7,
+            m = Math.floor((a + 11 * h + 22 * l) / 451),
+            month = Math.floor((h + l - 7 * m + 114) / 31),
+            day = ((h + l - 7 * m + 114) % 31) + 1;
+
+        let pascua = new Date(year, month - 1, day);
+        
+        // Viernes Santo
+        let viernesSanto = new Date(pascua);
+        viernesSanto.setDate(pascua.getDate() - 2);
+        holidays.add(viernesSanto.toDateString());
+
+        // Martes de Carnaval
+        let martesCarnaval = new Date(pascua);
+        martesCarnaval.setDate(pascua.getDate() - 47);
+        holidays.add(martesCarnaval.toDateString());
+
+        // Lunes de Carnaval
+        let lunesCarnaval = new Date(pascua);
+        lunesCarnaval.setDate(pascua.getDate() - 48);
+        holidays.add(lunesCarnaval.toDateString());
+
+        return holidays;
+    }
+
     function agregarDiasHabiles(fechaInicial, dias) {
         if (dias <= 0) return new Date(fechaInicial.valueOf());
         let fecha = new Date(fechaInicial.valueOf());
         let diasAgregados = 0;
+        let holidaysCache = {};
+
         while (diasAgregados < dias) {
             fecha.setDate(fecha.getDate() + 1);
-            if (fecha.getDay() !== 0 && fecha.getDay() !== 6) {
+            let y = fecha.getFullYear();
+            
+            if (!holidaysCache[y]) {
+                holidaysCache[y] = obtenerFeriadosPanama(y);
+            }
+            
+            // 0 es Domingo, 6 es Sábado
+            const esFinDeSemana = (fecha.getDay() === 0 || fecha.getDay() === 6);
+            const esFeriado = holidaysCache[y].has(fecha.toDateString());
+
+            if (!esFinDeSemana && !esFeriado) {
                 diasAgregados++;
             }
         }
@@ -367,8 +443,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Evitamos desfases de zona horaria forzando la interpretación local a medianoche
         const fechaBase = new Date(fechaPublicacionValor + 'T00:00:00');
         let fechaFinal;
+        
+        // Sumamos los 2 días hábiles iniciales obligatorios ignorando fines de semana y feriados panameños
         const fechaConDiasBase = agregarDiasHabiles(fechaBase, 2);
 
         if (tipoPlazoValor === 'Habiles') {
