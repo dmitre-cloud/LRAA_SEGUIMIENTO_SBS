@@ -42,24 +42,6 @@ class SolicitudListView(LoginRequiredMixin, ListView):
         
         return queryset
 
-class SolicitudDetailView(LoginRequiredMixin, DetailView):
-    model = Solicitud
-    template_name = 'solicitudes/solicitud_detail.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        solicitud = self.get_object()
-        seguimiento, created = SeguimientoCompra.objects.get_or_create(solicitud=solicitud)
-        
-        # Le pasamos el request.user al formulario al instanciarlo
-        context['seguimiento_form'] = SeguimientoCompraForm(
-            instance=seguimiento, 
-            user=self.request.user
-        )
-        
-        context['seguimiento'] = seguimiento
-        return context
-
 class SolicitudCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView): # 🌟 IMPORTANTE: Añadir UserPassesTestMixin aquí para usar test_func 🌟
     model = Solicitud
     form_class = SolicitudForm
@@ -94,15 +76,15 @@ class SolicitudUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         solicitud = self.get_object()
         user = self.request.user
         
-        # ✅ CORRECCIÓN: Permitir la edición si es el creador O si tiene el cargo de 'Asistente Administrativo'
-        # Esto permite que el creador (sin importar su cargo) edite, Y que el Asistente Administrativo edite cualquiera.
-        es_asistente_administrativo = user.job_position == 'Asistente Administrativo'
+        # Lista de cargos con super-permisos de edición
+        cargos_permitidos = ['Asistente Administrativo', 'Director Encargado']
+        
+        # ✅ CORRECCIÓN: Permitir la edición si es el creador O si tiene uno de los cargos autorizados
+        tiene_cargo_autorizado = user.job_position in cargos_permitidos
         es_el_solicitante = solicitud.solicitante == user
 
-        # Puede editar si es el solicitante O si es Asistente Administrativo
-        return es_el_solicitante or es_asistente_administrativo
+        return es_el_solicitante or tiene_cargo_autorizado
 
-# --- VISTA DE ELIMINACIÓN ---
 
 class SolicitudDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Solicitud
@@ -110,23 +92,35 @@ class SolicitudDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     success_url = reverse_lazy('solicitud-list')
 
     def test_func(self):
-        """
-        Verifica que el usuario pueda eliminar la solicitud.
-        """
         solicitud = self.get_object()
         user = self.request.user
         
-        # ✅ CORRECCIÓN: Permitir la eliminación si es el creador O si tiene el cargo de 'Asistente Administrativo'
-        es_asistente_administrativo = user.job_position == 'Asistente Administrativo'
+        # Lista de cargos con super-permisos de eliminación
+        cargos_permitidos = ['Asistente Administrativo', 'Director Encargado']
+        
+        # ✅ CORRECCIÓN: Permitir la eliminación si es el creador O si tiene uno de los cargos autorizados
+        tiene_cargo_autorizado = user.job_position in cargos_permitidos
         es_el_solicitante = solicitud.solicitante == user
         
-        # Puede eliminar si es el solicitante O si es Asistente Administrativo
-        return es_el_solicitante or es_asistente_administrativo
+        return es_el_solicitante or tiene_cargo_autorizado
 
-# --- Vista para actualizar el Seguimiento ---
-# ... (El resto del código de SeguimientoUpdateView, SeguimientoReportView, etc., se mantiene igual ya que no se necesita modificación
-# para el requisito de CRUD de Solicitud)
-# Si el Asistente Administrativo necesita permisos especiales en SeguimientoUpdateView, también deberías revisar esa vista.
+class SolicitudDetailView(LoginRequiredMixin, DetailView):
+    model = Solicitud
+    template_name = 'solicitudes/solicitud_detail.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        solicitud = self.get_object()
+        seguimiento, created = SeguimientoCompra.objects.get_or_create(solicitud=solicitud)
+        
+        # Le pasamos el request.user al formulario al instanciarlo
+        context['seguimiento_form'] = SeguimientoCompraForm(
+            instance=seguimiento, 
+            user=self.request.user
+        )
+        
+        context['seguimiento'] = seguimiento
+        return context
 
 class SeguimientoUpdateView(LoginRequiredMixin, UpdateView):
     model = SeguimientoCompra
